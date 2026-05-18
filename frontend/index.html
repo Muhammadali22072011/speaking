@@ -4,17 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Multilevel Speaking Trainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
   <div id="app">
     <header class="topbar">
-      <div class="brand" data-route="home">Multilevel <span class="brand-accent">Speaking</span></div>
-      <nav>
-        <a href="#" data-route="home">Home</a>
-        <a href="#" data-route="progress">Progress</a>
-      </nav>
+      <div class="topbar-inner">
+        <div class="brand" data-route="home">Multilevel <span class="brand-accent">Speaking</span></div>
+        <nav>
+          <a href="#" data-route="home">Home</a>
+          <a href="#" data-route="progress">Progress</a>
+          <button id="audio-toggle" class="audio-toggle" title="Toggle voice-over" aria-label="Toggle voice-over">
+            <span class="audio-icon-on">🔊</span>
+            <span class="audio-icon-off hidden">🔇</span>
+          </button>
+        </nav>
+      </div>
     </header>
 
     <main id="main"></main>
@@ -44,17 +53,25 @@
         <div class="progress-bar"><div class="progress-fill"></div></div>
       </div>
 
-      <div class="phase-label"></div>
-      <div class="timer mono">00</div>
+      <div class="part-stage">
+        <aside class="stage-side">
+          <div class="phase-label"></div>
+          <div class="timer mono">00</div>
+          <button class="replay-btn" type="button" title="Replay question audio">
+            <span class="replay-icon">🔁</span>
+            <span class="replay-label">Replay question</span>
+          </button>
+          <div class="recording-indicator hidden">
+            <span class="dot"></span> Recording
+          </div>
+        </aside>
 
-      <div class="visual-area"></div>
-      <div class="prompt-text serif"></div>
-
-      <div class="recording-indicator hidden">
-        <span class="dot"></span> Recording
+        <div class="stage-main">
+          <div class="visual-area"></div>
+          <div class="prompt-text serif"></div>
+          <div class="live-transcript"></div>
+        </div>
       </div>
-
-      <div class="live-transcript"></div>
 
       <div class="controls">
         <button class="skip-btn">Skip to next</button>
