@@ -413,11 +413,46 @@ details[open] summary { margin-bottom: 0.5rem; }
   margin-bottom: 0.5rem;
 }
 .answer-card .t {
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text);
   margin-bottom: 0.5rem;
 }
+.answer-card .t.raw { color: var(--text-muted); font-size: 0.8rem; font-style: italic; }
+.answer-card .intonation-note {
+  background: rgba(212, 162, 89, 0.08);
+  border-left: 2px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text);
+  margin: 0.25rem 0 0.5rem;
+}
+.answer-card .intonation-label {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-right: 0.4rem;
+}
+.answer-card .raw-transcript {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+}
+.answer-card .raw-transcript summary {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+.answer-card .raw-transcript summary::after { content: ''; }
 .answer-card audio { width: 100%; height: 32px; }
 
 /* Progress page */

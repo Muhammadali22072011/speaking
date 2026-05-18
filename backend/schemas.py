@@ -44,6 +44,8 @@ class StartSessionResponse(BaseModel):
 
 class TranscribeResponse(BaseModel):
     transcript: str
+    punctuated_transcript: str = ""
+    intonation_note: str = ""
     word_count: int
     duration_sec: float
 
@@ -87,6 +89,9 @@ class AnswerOut(BaseModel):
     question_subtype: str
     question_data: dict
     transcript: str
+    punctuated_transcript: Optional[str] = None
+    intonation_note: Optional[str] = None
+    prosody: Optional[dict] = None
     word_count: int
     duration_sec: float
     audio_url: str
