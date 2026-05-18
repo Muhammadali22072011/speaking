@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     debug: bool = False
 
     groq_model: str = "llama-3.3-70b-versatile"
+    # Whisper variant used for server-side transcription. `whisper-large-v3`
+    # is the most accurate Groq offers; swap to `whisper-large-v3-turbo`
+    # if you want roughly 2x faster transcription with a small accuracy
+    # trade-off.
+    groq_whisper_model: str = "whisper-large-v3"
 
     @property
     def audio_dir(self) -> Path:

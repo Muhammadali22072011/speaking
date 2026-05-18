@@ -1,12 +1,12 @@
 # Multilevel Speaking Trainer
 
-A local-first web app that simulates the **Speaking** section of the **Uzbekistan National Multilevel English exam** (Milliy Sertifikat / Ko'p darajali test, administered by BMBA). It walks you through the three exam parts at the exact official timings, records your answers, transcribes them in the browser, and grades the session with **Groq's free Llama-3.3-70B** against the four official CEFR-aligned criteria.
+A local-first web app that simulates the **Speaking** section of the **Uzbekistan National Multilevel English exam** (Milliy Sertifikat / Ko'p darajali test, administered by BMBA). It walks you through the three exam parts at the exact official timings, records your answers, transcribes them with **Groq Whisper**, and grades the session with **Groq's free Llama-3.3-70B** against the four official CEFR-aligned criteria.
 
 Designed for one user (you), running on a laptop or a free PaaS. **No paid APIs required.**
 
 ## What it costs to run: $0
 
-- **Transcription** uses the browser's built-in **Web Speech API** (Chrome, Edge, Safari) — runs entirely on your device, no upload, no key needed.
+- **Transcription** runs server-side on **Groq Whisper-large-v3** (the same free tier as the LLM, no extra key). The browser still captures a Web Speech API draft as a live preview during recording, but the saved transcript is whatever Whisper hears — much more accurate for non-native speakers. Whisper is given the wording of the current exam question as a vocabulary hint, which cuts mishears like "countersight" for "countryside" or "cause of living" for "cost of living". If the Whisper call fails, the browser draft is kept as a fallback.
 - **Punctuation restoration & intonation note** use **Groq Llama-3.3-70B** with prosody hints (pause boundaries + pitch contour) extracted in-browser via the Web Audio API.
 - **Grading and question generation** use **Groq Llama-3.3-70B** — generous free tier, no credit card.
 
@@ -80,7 +80,7 @@ GROQ_API_KEY=gsk_... docker compose up --build
                    grades)
 ```
 
-Transcription happens entirely in the browser. The Web Audio API runs a pitch + pause analyser alongside the recorder, producing a prosody summary that's sent to the backend together with the transcript. The backend stores the raw transcript + audio blob, asks Groq to restore punctuation and write a short intonation note, then asks Groq to grade the punctuated transcript with the prosody summary attached.
+The browser records audio, shows a live Web Speech API draft to the user, and runs a Web Audio API pitch + pause analyser alongside to produce a prosody summary. The audio blob, the draft transcript and the prosody summary are uploaded together; the backend then re-transcribes the audio with Groq Whisper (biased by the question wording), prefers that result over the browser draft, asks Groq Llama to restore punctuation and write a short intonation note, and finally asks Groq Llama to grade the punctuated transcript with the prosody summary attached.
 
 ## Exam format implemented
 

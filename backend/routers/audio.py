@@ -10,6 +10,11 @@ from backend.deps import get_db
 from backend.models import Answer, Question, Session
 from backend.schemas import TranscribeResponse
 from backend.services.punctuator import restore_punctuation
+from backend.services.whisper import (
+    WhisperError,
+    build_prompt_hint,
+    transcribe_audio,
+)
 
 router = APIRouter()
 log = logging.getLogger(__name__)
@@ -30,6 +35,33 @@ def _parse_prosody(raw: str) -> dict | None:
     return parsed if isinstance(parsed, dict) else None
 
 
+def _server_transcribe(
+    audio_bytes: bytes,
+    mime_type: str,
+    question: Question,
+) -> str:
+    """Run Groq Whisper on the recorded audio, biased toward the question wording.
+
+    Returns "" on any failure — the caller falls back to the browser transcript.
+    """
+    if not audio_bytes:
+        return ""
+    try:
+        prompt_hint = build_prompt_hint(question.data, question.subtype)
+        return transcribe_audio(
+            audio_bytes,
+            filename="answer.webm",
+            mime_type=mime_type or "audio/webm",
+            prompt=prompt_hint,
+        )
+    except WhisperError as e:
+        log.warning("Whisper transcription failed, falling back to browser text: %s", e)
+        return ""
+    except Exception:
+        log.exception("Unexpected error during Whisper transcription")
+        return ""
+
+
 @router.post("/audio/transcribe", response_model=TranscribeResponse)
 async def transcribe(
     audio: UploadFile = File(...),
@@ -41,12 +73,17 @@ async def transcribe(
     duration_sec: float = Form(0.0),
     db: SASession = Depends(get_db),
 ) -> TranscribeResponse:
-    """Persist the recorded audio + the transcript captured in the browser.
+    """Persist the recorded audio and produce the best transcript we can.
 
-    Transcription happens client-side via the Web Speech API; the backend
-    stores both artefacts, then runs Groq Llama to restore punctuation and
-    produce a short intonation note from the prosody features captured
-    during recording.
+    The browser already provides a Web Speech API draft (`transcript`),
+    but it mishears non-native speech often — so the backend now also
+    runs Groq Whisper on the uploaded audio, biased toward the wording of
+    the exam question, and prefers that result. The browser draft is the
+    fallback for the (rare) case Whisper is unavailable.
+
+    Once the cleanest transcript is chosen, Groq Llama restores
+    punctuation and writes a short intonation note from the prosody
+    features captured during recording.
     """
     session = db.get(Session, session_id)
     if not session:
@@ -64,7 +101,13 @@ async def transcribe(
     with open(audio_path, "wb") as f:
         f.write(contents)
 
-    transcript = (transcript or "").strip()
+    browser_transcript = (transcript or "").strip()
+    whisper_transcript = _server_transcribe(
+        contents,
+        audio.content_type or "audio/webm",
+        question,
+    )
+    transcript = whisper_transcript or browser_transcript
     wc = _word_count(transcript)
     prosody_data = _parse_prosody(prosody)
 
