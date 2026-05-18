@@ -86,5 +86,69 @@
       "How does music affect your mood or daily routine?",
       "Why does music play such an important role in different cultures?"
     ]
+  },
+  {
+    "picture": { "emoji": "🤫", "label": "Sharing a secret" },
+    "questions": [
+      "Tell me about a time when you shared a secret with another person.",
+      "How did you feel after sharing it?",
+      "How important is it to keep other people's secrets?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🎁", "label": "A memorable gift" },
+    "questions": [
+      "Describe a gift you have received that was special to you.",
+      "Why was this gift so meaningful?",
+      "Do you think the price of a gift matters more than the thought behind it?"
+    ]
+  },
+  {
+    "picture": { "emoji": "😊", "label": "A happy memory" },
+    "questions": [
+      "Tell me about one of the happiest moments of your life.",
+      "Why does this moment stand out to you?",
+      "Why is it important to remember and celebrate happy moments?"
+    ]
+  },
+  {
+    "picture": { "emoji": "💪", "label": "Overcoming a challenge" },
+    "questions": [
+      "Describe a difficult situation you faced and how you dealt with it.",
+      "What did you learn from this experience?",
+      "Why do some people handle challenges better than others?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🤝", "label": "Helping someone" },
+    "questions": [
+      "Tell me about a time when you helped someone in need.",
+      "How did it feel to help that person?",
+      "Why do you think helping others is important in society?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🌍", "label": "A favourite place" },
+    "questions": [
+      "Describe a place that is very special to you.",
+      "Why do you like spending time there?",
+      "How important is it for people to have a place where they feel comfortable?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🍽️", "label": "A memorable meal" },
+    "questions": [
+      "Tell me about a meal you really enjoyed.",
+      "Who were you with and where did you eat it?",
+      "Why do meals often play an important role in bringing people together?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🎉", "label": "A celebration or festival" },
+    "questions": [
+      "Describe a celebration or festival that is important in your country.",
+      "How do people usually celebrate it?",
+      "Why is it important to keep traditions and celebrations alive?"
+    ]
   }
 ]
