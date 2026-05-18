@@ -19,12 +19,26 @@ async function request(path, opts = {}) {
 }
 
 export const api = {
-  startSession(parts) {
+  startSession(parts, opts = {}) {
     return request('/api/sessions/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ parts }),
+      body: JSON.stringify({ parts, use_custom_only: !!opts.useCustomOnly }),
     });
+  },
+
+  customStats() {
+    return request('/api/questions/custom');
+  },
+
+  uploadQuestions(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    return request('/api/questions/upload', { method: 'POST', body: fd });
+  },
+
+  clearCustomQuestions() {
+    return request('/api/questions/custom', { method: 'DELETE' });
   },
 
   finishSession(sessionId) {

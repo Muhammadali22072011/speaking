@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class StartSessionRequest(BaseModel):
     parts: list[int] = Field(..., description="Subset of [1, 2, 3]")
+    use_custom_only: bool = Field(False, description="Use only user-uploaded questions")
 
     @field_validator("parts")
     @classmethod
@@ -56,6 +57,24 @@ class GenerateQuestionsRequest(BaseModel):
 class GenerateQuestionsResponse(BaseModel):
     inserted_ids: list[int]
     count: int
+
+
+class CustomQuestionsStats(BaseModel):
+    part1_personal: int
+    part1_compare: int
+    part2: int
+    part3: int
+    total: int
+
+
+class UploadQuestionsResponse(BaseModel):
+    inserted: CustomQuestionsStats
+    skipped: int
+    errors: list[str]
+
+
+class ClearCustomQuestionsResponse(BaseModel):
+    deleted: int
 
 
 class GradeFeedback(BaseModel):

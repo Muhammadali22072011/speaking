@@ -15,9 +15,9 @@ async def start_session(
     db: SASession = Depends(get_db),
 ) -> StartSessionResponse:
     try:
-        parts_payload = build_session_prompts(db, payload.parts)
+        parts_payload = build_session_prompts(db, payload.parts, custom_only=payload.use_custom_only)
     except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=400 if payload.use_custom_only else 500, detail=str(e))
 
     session = Session(parts=",".join(str(p) for p in payload.parts))
     db.add(session)
