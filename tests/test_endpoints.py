@@ -89,6 +89,116 @@ def test_finish_no_answers():
         assert r2.status_code == 400  # no answers yet
 
 
+def _sample_upload_payload() -> dict:
+    return {
+        "part1_personal": [
+            {"text": "Tell me about your hobby."},
+            {"text": "What music do you like?"},
+            {"text": "Where did you go on your last trip?"},
+        ],
+        "part1_compare": [
+            {
+                "pic1": {"emoji": "🚲", "label": "Cycling"},
+                "pic2": {"emoji": "🚶", "label": "Walking"},
+                "questions": ["What can you see in each picture?", "Which would you prefer?"],
+            }
+        ],
+        "part2": [
+            {
+                "picture": {"emoji": "🎮", "label": "A favourite game"},
+                "questions": [
+                    "Tell me about a game you enjoy.",
+                    "Why do you find it interesting?",
+                    "How can games be useful for learning?",
+                ],
+            }
+        ],
+        "part3": [
+            {
+                "topic": "Should homework be banned at primary school?",
+                "for_bullets": ["a", "b", "c", "d"],
+                "against_bullets": ["e", "f", "g", "h"],
+            }
+        ],
+    }
+
+
+def test_upload_questions_round_trip():
+    import json
+    payload = _sample_upload_payload()
+    with _client() as c:
+        r = c.post(
+            "/api/questions/upload",
+            files={"file": ("q.json", json.dumps(payload), "application/json")},
+        )
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["inserted"]["total"] == 6
+        assert body["inserted"]["part1_personal"] == 3
+        assert body["skipped"] == 0
+        assert body["errors"] == []
+
+        stats = c.get("/api/questions/custom").json()
+        assert stats["total"] == 6
+
+        # delete
+        d = c.delete("/api/questions/custom")
+        assert d.status_code == 200
+        assert d.json()["deleted"] == 6
+
+        stats2 = c.get("/api/questions/custom").json()
+        assert stats2["total"] == 0
+
+
+def test_upload_questions_partial_invalid():
+    import json
+    payload = {
+        "part1_personal": [
+            {"text": "Good question."},
+            {"text": ""},          # invalid
+            {"nope": "x"},          # invalid
+        ],
+    }
+    with _client() as c:
+        r = c.post(
+            "/api/questions/upload",
+            files={"file": ("q.json", json.dumps(payload), "application/json")},
+        )
+        assert r.status_code == 200
+        body = r.json()
+        assert body["inserted"]["part1_personal"] == 1
+        assert body["skipped"] == 2
+        assert len(body["errors"]) == 2
+
+
+def test_upload_invalid_json():
+    with _client() as c:
+        r = c.post(
+            "/api/questions/upload",
+            files={"file": ("q.json", b"not json", "application/json")},
+        )
+        assert r.status_code == 400
+
+
+def test_start_session_custom_only_requires_uploads():
+    with _client() as c:
+        r = c.post("/api/sessions/start", json={"parts": [1], "use_custom_only": True})
+        assert r.status_code == 400
+
+
+def test_start_session_custom_only_succeeds_after_upload():
+    import json
+    with _client() as c:
+        c.post(
+            "/api/questions/upload",
+            files={"file": ("q.json", json.dumps(_sample_upload_payload()), "application/json")},
+        )
+        r = c.post("/api/sessions/start", json={"parts": [1, 2, 3], "use_custom_only": True})
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert len(body["parts"]) == 3
+
+
 def test_transcribe_endpoint_runs_punctuator_and_persists_prosody():
     """POST /api/audio/transcribe should call the punctuator and store the
     punctuated transcript, intonation note, and prosody summary."""
