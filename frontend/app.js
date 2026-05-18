@@ -73,20 +73,37 @@ document.getElementById('audio-toggle')?.addEventListener('click', () => {
 
 function renderHome() {
   mountTemplate('tpl-home');
+  const customToggle = main.querySelector('#use-custom-only');
+  const statsEl = main.querySelector('#custom-toggle-stats');
+  refreshCustomStats(statsEl, customToggle);
+
   document.querySelectorAll('[data-start]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const parts = btn.dataset.start.split(',').map(Number);
-      runSession(parts);
+      runSession(parts, { useCustomOnly: !!customToggle?.checked });
     });
   });
 }
 
+async function refreshCustomStats(statsEl, toggle) {
+  try {
+    const stats = await api.customStats();
+    if (statsEl) statsEl.textContent = `${stats.total} uploaded`;
+    if (toggle) {
+      toggle.disabled = stats.total === 0;
+      if (stats.total === 0) toggle.checked = false;
+    }
+  } catch {
+    if (statsEl) statsEl.textContent = '—';
+  }
+}
+
 // --- Exam loop ---------------------------------------------------------
 
-async function runSession(parts) {
+async function runSession(parts, opts = {}) {
   let session;
   try {
-    session = await api.startSession(parts);
+    session = await api.startSession(parts, opts);
   } catch (e) {
     showToast(e.detail || e.message || 'Failed to start session');
     return;
@@ -335,6 +352,151 @@ async function renderProgress() {
   };
   tryDraw();
 }
+
+// --- Upload modal ------------------------------------------------------
+
+const TEMPLATE_JSON = {
+  part1_personal: [
+    { text: "Tell me about a teacher who influenced you." },
+    { text: "How do you usually spend your weekends?" }
+  ],
+  part1_compare: [
+    {
+      pic1: { emoji: "🍳", label: "Cooking at home" },
+      pic2: { emoji: "🍽️", label: "Eating at a restaurant" },
+      questions: [
+        "What is happening in each picture?",
+        "Which would you choose on a weekend, and why?"
+      ]
+    }
+  ],
+  part2: [
+    {
+      picture: { emoji: "🎮", label: "A favourite game" },
+      questions: [
+        "Tell me about a game you enjoy playing.",
+        "Why do you find it interesting?",
+        "How can games be useful for learning?"
+      ]
+    }
+  ],
+  part3: [
+    {
+      topic: "Should homework be banned at primary school?",
+      for_bullets: [
+        "More time for sport and family",
+        "Less stress for young children",
+        "Encourages curiosity, not duty",
+        "Teachers can cover everything in class"
+      ],
+      against_bullets: [
+        "Builds study habits early",
+        "Reinforces what was learnt in class",
+        "Prepares pupils for higher grades",
+        "Parents can see what is being studied"
+      ]
+    }
+  ]
+};
+
+let uploadModalEl = null;
+
+function openUploadModal() {
+  if (uploadModalEl) return;
+  const tpl = document.getElementById('tpl-upload-modal');
+  uploadModalEl = tpl.content.firstElementChild.cloneNode(true);
+  document.body.appendChild(uploadModalEl);
+
+  const close = () => {
+    uploadModalEl?.remove();
+    uploadModalEl = null;
+    // Refresh home stats if home is mounted
+    const t = document.getElementById('custom-toggle-stats');
+    const c = document.getElementById('use-custom-only');
+    if (t) refreshCustomStats(t, c);
+  };
+
+  uploadModalEl.querySelector('.modal-close').addEventListener('click', close);
+  uploadModalEl.addEventListener('click', (e) => { if (e.target === uploadModalEl) close(); });
+  document.addEventListener('keydown', function escClose(e) {
+    if (e.key === 'Escape' && uploadModalEl) { close(); document.removeEventListener('keydown', escClose); }
+  });
+
+  refreshUploadStats();
+
+  uploadModalEl.querySelector('#upload-file').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const resultEl = uploadModalEl.querySelector('#upload-result');
+    resultEl.classList.remove('hidden', 'error', 'success');
+    resultEl.textContent = 'Uploading…';
+    try {
+      const res = await api.uploadQuestions(file);
+      const total = res.inserted.total;
+      const parts = [];
+      if (res.inserted.part1_personal) parts.push(`${res.inserted.part1_personal} personal`);
+      if (res.inserted.part1_compare) parts.push(`${res.inserted.part1_compare} compare`);
+      if (res.inserted.part2) parts.push(`${res.inserted.part2} long-turn`);
+      if (res.inserted.part3) parts.push(`${res.inserted.part3} debate`);
+      let msg = total ? `Added ${total} question${total === 1 ? '' : 's'} (${parts.join(', ')}).` : 'No valid questions found.';
+      if (res.skipped) msg += ` Skipped ${res.skipped} invalid.`;
+      resultEl.classList.add(total ? 'success' : 'error');
+      resultEl.innerHTML = msg + (res.errors?.length ? `<details><summary>Show ${res.errors.length} issue${res.errors.length === 1 ? '' : 's'}</summary><ul>${res.errors.map((x) => `<li>${escapeHtml(x)}</li>`).join('')}</ul></details>` : '');
+      refreshUploadStats();
+    } catch (err) {
+      resultEl.classList.add('error');
+      resultEl.textContent = err.detail || err.message || 'Upload failed';
+    } finally {
+      e.target.value = '';
+    }
+  });
+
+  uploadModalEl.querySelector('#download-template').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(TEMPLATE_JSON, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'my-questions-template.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  uploadModalEl.querySelector('#clear-custom').addEventListener('click', async () => {
+    if (!confirm('Delete all uploaded questions? This cannot be undone.')) return;
+    try {
+      const res = await api.clearCustomQuestions();
+      const resultEl = uploadModalEl.querySelector('#upload-result');
+      resultEl.classList.remove('hidden', 'error');
+      resultEl.classList.add('success');
+      resultEl.textContent = `Removed ${res.deleted} question${res.deleted === 1 ? '' : 's'}.`;
+      refreshUploadStats();
+    } catch (err) {
+      showToast(err.detail || err.message || 'Failed to clear');
+    }
+  });
+}
+
+async function refreshUploadStats() {
+  if (!uploadModalEl) return;
+  try {
+    const stats = await api.customStats();
+    uploadModalEl.querySelectorAll('[data-key]').forEach((el) => {
+      el.textContent = stats[el.dataset.key] ?? 0;
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#open-upload')) {
+    e.preventDefault();
+    openUploadModal();
+  }
+});
 
 // --- Boot --------------------------------------------------------------
 

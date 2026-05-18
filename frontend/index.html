@@ -18,6 +18,7 @@
         <nav>
           <a href="#" data-route="home">Home</a>
           <a href="#" data-route="progress">Progress</a>
+          <a href="#" id="open-upload">My questions</a>
           <button id="audio-toggle" class="audio-toggle" title="Toggle voice-over" aria-label="Toggle voice-over">
             <span class="audio-icon-on">🔊</span>
             <span class="audio-icon-off hidden">🔇</span>
@@ -42,8 +43,87 @@
         <button class="big-btn" data-start="3">Part 3 only<span class="hint">~3 min</span></button>
         <button class="big-btn primary" data-start="1,2,3">Full mock test<span class="hint">~15 min</span></button>
       </div>
+      <label class="custom-toggle">
+        <input type="checkbox" id="use-custom-only" />
+        <span>Use <strong>my own</strong> uploaded questions only</span>
+        <span class="custom-toggle-stats mono" id="custom-toggle-stats">0 uploaded</span>
+      </label>
       <p class="footnote">Make sure your microphone is connected. You'll be asked for permission when recording starts.</p>
     </section>
+  </template>
+
+  <template id="tpl-upload-modal">
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <button class="modal-close" aria-label="Close">&times;</button>
+        <h2 class="serif">My questions</h2>
+        <p class="muted">Upload a JSON file with your own questions. You can include any combination of parts — sections you skip will fall back to the built-in bank (unless you tick "Use my questions only" on the home screen).</p>
+
+        <div class="upload-stats" id="upload-stats">
+          <div class="us-row"><span>Part 1 · personal</span><b class="mono" data-key="part1_personal">0</b></div>
+          <div class="us-row"><span>Part 1 · picture compare</span><b class="mono" data-key="part1_compare">0</b></div>
+          <div class="us-row"><span>Part 2 · long turn</span><b class="mono" data-key="part2">0</b></div>
+          <div class="us-row"><span>Part 3 · for / against</span><b class="mono" data-key="part3">0</b></div>
+        </div>
+
+        <div class="upload-row">
+          <label class="file-pick">
+            <input type="file" id="upload-file" accept="application/json,.json" />
+            <span>Choose JSON file…</span>
+          </label>
+          <button class="link-btn" id="download-template" type="button">Download template</button>
+          <button class="link-btn danger" id="clear-custom" type="button">Clear my questions</button>
+        </div>
+
+        <div class="upload-result hidden" id="upload-result"></div>
+
+        <details class="upload-help">
+          <summary class="serif">JSON format</summary>
+<pre class="code-block"><code>{
+  "part1_personal": [
+    { "text": "Tell me about your favourite teacher." }
+  ],
+  "part1_compare": [
+    {
+      "pic1": { "emoji": "🍕", "label": "Eating at home" },
+      "pic2": { "emoji": "🍔", "label": "Eating fast food" },
+      "questions": [
+        "What can you see in each picture?",
+        "Which do you usually prefer, and why?"
+      ]
+    }
+  ],
+  "part2": [
+    {
+      "picture": { "emoji": "🎮", "label": "A favourite game" },
+      "questions": [
+        "Tell me about a game you enjoy playing.",
+        "Why do you find it interesting?",
+        "How can games be useful for learning?"
+      ]
+    }
+  ],
+  "part3": [
+    {
+      "topic": "Should homework be banned at primary school?",
+      "for_bullets": [
+        "More time for sport and family",
+        "Less stress for young children",
+        "Encourages curiosity, not duty",
+        "Teachers can cover everything in class"
+      ],
+      "against_bullets": [
+        "Builds study habits early",
+        "Reinforces what was learnt in class",
+        "Prepares pupils for higher grades",
+        "Parents can see what is being studied"
+      ]
+    }
+  ]
+}</code></pre>
+        </details>
+      </div>
+    </div>
   </template>
 
   <template id="tpl-part-active">
