@@ -89,6 +89,56 @@ def test_finish_no_answers():
         assert r2.status_code == 400  # no answers yet
 
 
+def test_transcribe_endpoint_runs_punctuator_and_persists_prosody():
+    """POST /api/audio/transcribe should call the punctuator and store the
+    punctuated transcript, intonation note, and prosody summary."""
+    import json
+    from backend import database as dbmod
+    from backend.models import Answer
+
+    fake_punct = (
+        '{"punctuated": "I am from Tashkent. It is a big city.",'
+        ' "intonation_note": "Steady pace with one long pause."}'
+    )
+    prosody = {
+        "pitch_mean_hz": 165.0,
+        "pitch_range_hz": 80.0,
+        "pause_count": 3,
+        "long_pause_count": 1,
+        "total_pause_sec": 2.1,
+        "pauses": [[1.0, 1.7]],
+    }
+
+    with patch("backend.services.punctuator.generate_text", return_value=fake_punct):
+        with _client() as c:
+            r = c.post("/api/sessions/start", json={"parts": [1]})
+            session_id = r.json()["session_id"]
+            qid = r.json()["parts"][0]["prompts"][0]["question_id"]
+
+            files = {"audio": ("0.webm", b"fake-webm-bytes", "audio/webm")}
+            data = {
+                "transcript": "i am from tashkent it is a big city",
+                "prosody": json.dumps(prosody),
+                "session_id": str(session_id),
+                "question_id": str(qid),
+                "question_idx": "0",
+                "duration_sec": "12.5",
+            }
+            r2 = c.post("/api/audio/transcribe", files=files, data=data)
+            assert r2.status_code == 200, r2.text
+            body = r2.json()
+            assert body["punctuated_transcript"].startswith("I am from Tashkent")
+            assert "Steady pace" in body["intonation_note"]
+
+            db = dbmod.SessionLocal()
+            a = db.query(Answer).filter(Answer.session_id == session_id).first()
+            assert a is not None
+            assert a.punctuated_transcript.startswith("I am from Tashkent")
+            assert a.intonation_note == "Steady pace with one long pause."
+            assert a.prosody_json["pause_count"] == 3
+            db.close()
+
+
 def test_finish_session_with_mocked_grading():
     """End-to-end: start session, fake an answer, finish, fetch result."""
     from backend import database as dbmod

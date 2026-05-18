@@ -1,4 +1,7 @@
-// MediaRecorder wrapper + optional Web Speech API live transcript.
+// MediaRecorder wrapper + optional Web Speech API live transcript
+// + optional Web Audio prosody analyser (pitch contour, pauses).
+
+import { ProsodyAnalyser } from '/static/prosody.js';
 
 export class AudioRecorder {
   constructor() {
@@ -10,6 +13,8 @@ export class AudioRecorder {
     this.recognition = null;
     this.liveText = '';
     this.onLiveText = null;
+    this.prosody = null;
+    this.prosodySummary = null;
   }
 
   static isSupported() {
@@ -47,6 +52,18 @@ export class AudioRecorder {
     this.mediaRecorder.start();
 
     this._startSpeechRecognition();
+    this._startProsody();
+  }
+
+  async _startProsody() {
+    this.prosodySummary = null;
+    if (!ProsodyAnalyser.isSupported()) return;
+    try {
+      this.prosody = new ProsodyAnalyser();
+      await this.prosody.start(this.stream);
+    } catch (e) {
+      this.prosody = null;
+    }
   }
 
   _startSpeechRecognition() {
@@ -77,7 +94,7 @@ export class AudioRecorder {
   }
 
   async stop() {
-    return new Promise((resolve) => {
+    const stopPromise = new Promise((resolve) => {
       if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
         resolve({ blob: new Blob(this.chunks, { type: 'audio/webm' }), durationSec: 0 });
         return;
@@ -94,6 +111,14 @@ export class AudioRecorder {
         this.recognition = null;
       }
     });
+    let prosodyPromise = Promise.resolve(null);
+    if (this.prosody) {
+      prosodyPromise = this.prosody.stop().catch(() => null);
+      this.prosody = null;
+    }
+    const [recResult, prosodySummary] = await Promise.all([stopPromise, prosodyPromise]);
+    this.prosodySummary = prosodySummary;
+    return recResult;
   }
 
   release() {
