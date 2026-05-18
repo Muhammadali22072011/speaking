@@ -200,8 +200,8 @@ def test_start_session_custom_only_succeeds_after_upload():
 
 
 def test_transcribe_endpoint_runs_punctuator_and_persists_prosody():
-    """POST /api/audio/transcribe should call the punctuator and store the
-    punctuated transcript, intonation note, and prosody summary."""
+    """POST /api/audio/transcribe should call Whisper for transcription,
+    the punctuator for restoration, and store the result + prosody."""
     import json
     from backend import database as dbmod
     from backend.models import Answer
@@ -210,6 +210,7 @@ def test_transcribe_endpoint_runs_punctuator_and_persists_prosody():
         '{"punctuated": "I am from Tashkent. It is a big city.",'
         ' "intonation_note": "Steady pace with one long pause."}'
     )
+    whisper_text = "I am from Tashkent it is a big city"
     prosody = {
         "pitch_mean_hz": 165.0,
         "pitch_range_hz": 80.0,
@@ -219,7 +220,8 @@ def test_transcribe_endpoint_runs_punctuator_and_persists_prosody():
         "pauses": [[1.0, 1.7]],
     }
 
-    with patch("backend.services.punctuator.generate_text", return_value=fake_punct):
+    with patch("backend.services.punctuator.generate_text", return_value=fake_punct), \
+         patch("backend.routers.audio.transcribe_audio", return_value=whisper_text) as wh:
         with _client() as c:
             r = c.post("/api/sessions/start", json={"parts": [1]})
             session_id = r.json()["session_id"]
@@ -227,7 +229,7 @@ def test_transcribe_endpoint_runs_punctuator_and_persists_prosody():
 
             files = {"audio": ("0.webm", b"fake-webm-bytes", "audio/webm")}
             data = {
-                "transcript": "i am from tashkent it is a big city",
+                "transcript": "garbled browser draft",
                 "prosody": json.dumps(prosody),
                 "session_id": str(session_id),
                 "question_id": str(qid),
@@ -237,15 +239,56 @@ def test_transcribe_endpoint_runs_punctuator_and_persists_prosody():
             r2 = c.post("/api/audio/transcribe", files=files, data=data)
             assert r2.status_code == 200, r2.text
             body = r2.json()
+            # Whisper output replaces the browser draft before punctuation runs.
+            assert body["transcript"] == whisper_text
             assert body["punctuated_transcript"].startswith("I am from Tashkent")
             assert "Steady pace" in body["intonation_note"]
+            wh.assert_called_once()
+            # The question wording should have flowed through as a prompt hint.
+            assert wh.call_args.kwargs.get("prompt"), "Whisper should receive a prompt hint"
 
             db = dbmod.SessionLocal()
             a = db.query(Answer).filter(Answer.session_id == session_id).first()
             assert a is not None
+            assert a.transcript == whisper_text
             assert a.punctuated_transcript.startswith("I am from Tashkent")
             assert a.intonation_note == "Steady pace with one long pause."
             assert a.prosody_json["pause_count"] == 3
+            db.close()
+
+
+def test_transcribe_endpoint_falls_back_to_browser_when_whisper_fails():
+    """If Whisper raises, the browser draft must still be persisted."""
+    import json
+    from backend import database as dbmod
+    from backend.models import Answer
+    from backend.services.whisper import WhisperError
+
+    fake_punct = '{"punctuated": "Hello world.", "intonation_note": ""}'
+
+    with patch("backend.services.punctuator.generate_text", return_value=fake_punct), \
+         patch("backend.routers.audio.transcribe_audio", side_effect=WhisperError("boom")):
+        with _client() as c:
+            r = c.post("/api/sessions/start", json={"parts": [1]})
+            session_id = r.json()["session_id"]
+            qid = r.json()["parts"][0]["prompts"][0]["question_id"]
+
+            files = {"audio": ("0.webm", b"fake-webm-bytes", "audio/webm")}
+            data = {
+                "transcript": "hello world",
+                "prosody": "",
+                "session_id": str(session_id),
+                "question_id": str(qid),
+                "question_idx": "0",
+                "duration_sec": "5.0",
+            }
+            r2 = c.post("/api/audio/transcribe", files=files, data=data)
+            assert r2.status_code == 200, r2.text
+            assert r2.json()["transcript"] == "hello world"
+
+            db = dbmod.SessionLocal()
+            a = db.query(Answer).filter(Answer.session_id == session_id).first()
+            assert a.transcript == "hello world"
             db.close()
 
 
