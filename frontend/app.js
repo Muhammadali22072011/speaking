@@ -7,6 +7,7 @@ import { renderPart1 } from '/static/parts/part1.js';
 import { renderPart2 } from '/static/parts/part2.js';
 import { renderPart3 } from '/static/parts/part3.js';
 import { renderResults } from '/static/parts/results.js';
+import { speech, promptToSpeech } from '/static/speech.js';
 
 const main = document.getElementById('main');
 const toast = document.getElementById('toast');
@@ -37,6 +38,7 @@ const routes = {
 function goto(name, payload) {
   const fn = routes[name];
   if (!fn) return;
+  speech.cancel();
   fn(payload);
 }
 
@@ -46,6 +48,25 @@ document.addEventListener('click', (e) => {
     e.preventDefault();
     goto(t.dataset.route);
   }
+});
+
+// Voice-over master toggle in the topbar.
+function syncAudioToggle() {
+  const btn = document.getElementById('audio-toggle');
+  if (!btn) return;
+  const on = btn.querySelector('.audio-icon-on');
+  const off = btn.querySelector('.audio-icon-off');
+  if (!on || !off) return;
+  on.classList.toggle('hidden', !speech.enabled);
+  off.classList.toggle('hidden', speech.enabled);
+  btn.classList.toggle('muted', !speech.enabled);
+  btn.title = speech.enabled ? 'Voice-over on — click to mute' : 'Voice-over off — click to enable';
+}
+document.addEventListener('DOMContentLoaded', syncAudioToggle);
+syncAudioToggle();
+document.getElementById('audio-toggle')?.addEventListener('click', () => {
+  speech.toggle();
+  syncAudioToggle();
 });
 
 // --- Home --------------------------------------------------------------
@@ -166,10 +187,20 @@ async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, count
   const recIndicator = main.querySelector('.recording-indicator');
   const liveEl = main.querySelector('.live-transcript');
   const skipBtn = main.querySelector('.skip-btn');
+  const replayBtn = main.querySelector('.replay-btn');
 
   counterEl.textContent = counter;
   progressEl.style.width = `${Math.round(progress * 100)}%`;
   renderPromptVisuals(prompt, visualEl, promptTextEl);
+
+  const spokenText = promptToSpeech(prompt);
+  if (replayBtn) {
+    replayBtn.addEventListener('click', () => { speech.speak(spokenText); });
+    replayBtn.classList.toggle('hidden', !spokenText || !speech.supported);
+  }
+
+  // Speak the prompt as preparation begins.
+  if (spokenText) speech.speak(spokenText);
 
   // Phase 1: preparation
   await runPhase({
@@ -179,8 +210,10 @@ async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, count
     phaseEl, timerEl, skipBtn,
   });
 
-  // Phase 2: recording. Browser Web Speech API gives us the live AND final transcript.
+  // Phase 2: recording. Stop any voice-over so it doesn't bleed into the microphone.
+  speech.cancel();
   recIndicator.classList.remove('hidden');
+  if (replayBtn) replayBtn.classList.add('hidden');
   liveEl.textContent = '';
   let lastTranscript = '';
   await recorder.start({ onLiveText: (t) => { lastTranscript = t; liveEl.textContent = t; } });
