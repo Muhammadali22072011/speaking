@@ -1,7 +1,7 @@
-"""LLM grader for a Speaking session (Google Gemini, free tier).
+"""LLM grader for a Speaking session (Groq Llama-3.3-70B, free tier).
 
 Kept under this file name for backwards compat with existing imports;
-the implementation now talks to Gemini, not Anthropic.
+the implementation now talks to Groq.
 """
 import json
 import logging

@@ -9,12 +9,12 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    google_api_key: str
+    groq_api_key: str
     database_url: str = "sqlite:///./multilevel.db"
     audio_upload_dir: str = "./audio_uploads"
     debug: bool = False
 
-    gemini_model: str = "gemini-2.0-flash"
+    groq_model: str = "llama-3.3-70b-versatile"
 
     @property
     def audio_dir(self) -> Path:
@@ -33,8 +33,8 @@ def get_settings() -> Settings:
             _settings = Settings()
         except Exception as e:
             raise RuntimeError(
-                "Failed to load settings. Ensure .env exists with GOOGLE_API_KEY. "
-                "Get a free key at https://aistudio.google.com/apikey. "
+                "Failed to load settings. Ensure .env exists with GROQ_API_KEY. "
+                "Get a free key at https://console.groq.com/keys. "
                 f"Underlying error: {e}"
             ) from e
     return _settings

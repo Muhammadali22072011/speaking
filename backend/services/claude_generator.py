@@ -1,4 +1,4 @@
-"""LLM-based question generator (Gemini, free tier)."""
+"""LLM-based question generator (Groq, free tier)."""
 import json
 import logging
 import re
@@ -75,7 +75,7 @@ def generate_questions(part: int, count: int) -> list[int]:
         raise ValueError(f"Invalid part: {part}")
 
     prompt = PART_INSTRUCTIONS[part].format(count=count)
-    log.info("Generating %d questions for part %d via Gemini", count, part)
+    log.info("Generating %d questions for part %d via Groq", count, part)
 
     try:
         text = generate_text(GENERATOR_SYSTEM, prompt, max_output_tokens=2000)

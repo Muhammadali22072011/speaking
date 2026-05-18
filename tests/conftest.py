@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _env_setup(monkeypatch, tmp_path: Path):
-    monkeypatch.setenv("GOOGLE_API_KEY", "test-google-key")
+    monkeypatch.setenv("GROQ_API_KEY", "test-groq-key")
     db_path = tmp_path / "test.db"
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
     audio_path = tmp_path / "audio"

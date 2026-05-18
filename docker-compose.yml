@@ -4,7 +4,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
       - DATABASE_URL=sqlite:///./data/multilevel.db
       - AUDIO_UPLOAD_DIR=./data/audio_uploads
       - DEBUG=${DEBUG:-false}
