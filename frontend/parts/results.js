@@ -68,12 +68,40 @@ export function renderResults(root, result) {
   result.answers.forEach((a) => {
     const card = document.createElement('div');
     card.className = 'answer-card';
+    const punctuated = a.punctuated_transcript || a.transcript || '';
+    const showRaw = a.punctuated_transcript && a.transcript &&
+                    a.punctuated_transcript.trim() !== a.transcript.trim();
+    const metaBits = [`${a.word_count} words`, `${a.duration_sec.toFixed(1)}s`];
+    if (a.prosody) {
+      if (a.prosody.pitch_range_hz != null) {
+        metaBits.push(`pitch ±${Math.round(a.prosody.pitch_range_hz)} Hz`);
+      }
+      if (a.prosody.pause_count != null) {
+        metaBits.push(`${a.prosody.pause_count} pauses`);
+      }
+    }
     card.innerHTML = `
       <div class="q">Part ${a.question_part} · ${renderQuestionText(a)}</div>
-      <div class="meta">${a.word_count} words · ${a.duration_sec.toFixed(1)}s</div>
-      <div class="t">${a.transcript || '(no transcript)'}</div>
-      <audio controls preload="none" src="${a.audio_url}"></audio>
+      <div class="meta">${metaBits.join(' · ')}</div>
+      <div class="t">${punctuated || '(no transcript)'}</div>
     `;
+    if (a.intonation_note) {
+      const note = document.createElement('div');
+      note.className = 'intonation-note';
+      note.innerHTML = `<span class="intonation-label">Intonation</span> ${a.intonation_note}`;
+      card.appendChild(note);
+    }
+    if (showRaw) {
+      const raw = document.createElement('details');
+      raw.className = 'raw-transcript';
+      raw.innerHTML = `<summary>Raw transcript</summary><div class="t raw">${a.transcript}</div>`;
+      card.appendChild(raw);
+    }
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.preload = 'none';
+    audio.src = a.audio_url;
+    card.appendChild(audio);
     answersList.appendChild(card);
   });
 }

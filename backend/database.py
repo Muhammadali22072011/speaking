@@ -28,6 +28,27 @@ def init_db() -> None:
     from backend import models  # noqa: F401 — register models
     engine = _ensure_engine()
     Base.metadata.create_all(bind=engine)
+    _migrate_added_columns(engine)
+
+
+def _migrate_added_columns(engine) -> None:
+    """Apply additive column migrations on existing SQLite databases."""
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+    from sqlalchemy import text
+    additions = {
+        "answers": [
+            ("punctuated_transcript", "TEXT"),
+            ("intonation_note", "TEXT"),
+            ("prosody_json", "JSON"),
+        ],
+    }
+    with engine.begin() as conn:
+        for table, cols in additions.items():
+            existing = {row[1] for row in conn.execute(text(f"PRAGMA table_info({table})"))}
+            for name, sql_type in cols:
+                if name not in existing:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {sql_type}"))
 
 
 def get_db() -> Generator[Session, None, None]:

@@ -70,5 +70,61 @@
       "Describe what the people are doing in these pictures.",
       "Which do you find more important in your life, and why?"
     ]
+  },
+  {
+    "pic1": { "emoji": "👯‍♀️", "label": "Four friends having dinner at a restaurant" },
+    "pic2": { "emoji": "👨‍👩‍👧‍👦", "label": "A family eating together at home" },
+    "questions": [
+      "Describe what is happening in each picture.",
+      "Why do some people prefer eating at restaurants rather than at home?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "📞", "label": "Talking on the phone" },
+    "pic2": { "emoji": "💬", "label": "Texting on a messenger app" },
+    "questions": [
+      "What is each person doing in the pictures?",
+      "Which way of communicating do you prefer, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "🛏️", "label": "Resting at home" },
+    "pic2": { "emoji": "🥾", "label": "Hiking outdoors" },
+    "questions": [
+      "Describe how the people are spending their free time.",
+      "Which way of relaxing do you find more enjoyable, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "📝", "label": "Writing notes by hand" },
+    "pic2": { "emoji": "⌨️", "label": "Typing on a laptop" },
+    "questions": [
+      "What are the people doing in each picture?",
+      "Which method do you prefer for taking notes, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "🐕", "label": "Walking a dog" },
+    "pic2": { "emoji": "🐈", "label": "Playing with a cat at home" },
+    "questions": [
+      "Describe what is happening in each picture.",
+      "Which pet would you prefer to have, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "☕", "label": "Drinking coffee in a café" },
+    "pic2": { "emoji": "🍵", "label": "Drinking tea at home" },
+    "questions": [
+      "What are the people doing in each picture?",
+      "Which place would you choose to spend an hour relaxing, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "🚲", "label": "Cycling to work" },
+    "pic2": { "emoji": "🚌", "label": "Taking the bus" },
+    "questions": [
+      "Describe how each person is getting to work.",
+      "Which way of commuting would you prefer, and why?"
+    ]
   }
 ]

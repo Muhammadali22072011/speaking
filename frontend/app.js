@@ -245,6 +245,7 @@ async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, count
   recIndicator.classList.add('hidden');
   const { blob, durationSec } = await recorder.stop();
   const finalTranscript = (recorder.liveText || lastTranscript || '').trim();
+  const prosody = recorder.prosodySummary || null;
 
   // Show uploading screen
   mountTemplate('tpl-transcribing');
@@ -253,6 +254,7 @@ async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, count
     await api.uploadAudio({
       blob,
       transcript: finalTranscript,
+      prosody,
       sessionId,
       questionId: prompt.question_id,
       questionIdx,

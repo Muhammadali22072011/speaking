@@ -7,6 +7,7 @@ Designed for one user (you), running on a laptop or a free PaaS. **No paid APIs 
 ## What it costs to run: $0
 
 - **Transcription** uses the browser's built-in **Web Speech API** (Chrome, Edge, Safari) — runs entirely on your device, no upload, no key needed.
+- **Punctuation restoration & intonation note** use **Groq Llama-3.3-70B** with prosody hints (pause boundaries + pitch contour) extracted in-browser via the Web Audio API.
 - **Grading and question generation** use **Groq Llama-3.3-70B** — generous free tier, no credit card.
 
 ## Get a free Groq API key
@@ -79,7 +80,7 @@ GROQ_API_KEY=gsk_... docker compose up --build
                    grades)
 ```
 
-Transcription happens entirely in the browser. The backend stores the transcript text + audio blob (for playback on the results screen) and asks Groq to grade the transcript.
+Transcription happens entirely in the browser. The Web Audio API runs a pitch + pause analyser alongside the recorder, producing a prosody summary that's sent to the backend together with the transcript. The backend stores the raw transcript + audio blob, asks Groq to restore punctuation and write a short intonation note, then asks Groq to grade the punctuated transcript with the prosody summary attached.
 
 ## Exam format implemented
 

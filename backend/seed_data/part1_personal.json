@@ -15,5 +15,22 @@
   { "text": "How important is exercise in your daily life?" },
   { "text": "Tell me about a family tradition that is important to you." },
   { "text": "Do you think technology has changed the way young people communicate? In what way?" },
-  { "text": "What kind of job would you like to have in the future, and why?" }
+  { "text": "What kind of job would you like to have in the future, and why?" },
+  { "text": "What is your typical day like?" },
+  { "text": "Tell me about your first teacher. What do you remember about them?" },
+  { "text": "Do you have any pets? If yes, tell me about them; if not, would you like to have one?" },
+  { "text": "Tell me about your best friend. How did you meet?" },
+  { "text": "Do you enjoy cooking? What is the last thing you cooked?" },
+  { "text": "What do you usually do in your free time?" },
+  { "text": "Tell me about a sport or game you enjoy playing or watching." },
+  { "text": "How do you usually celebrate your birthday?" },
+  { "text": "Do you like shopping? Where do you prefer to shop, online or in stores?" },
+  { "text": "Tell me about a place in your city that you would recommend to a visitor." },
+  { "text": "What kind of films or TV shows do you enjoy watching?" },
+  { "text": "How important is your family in your daily life?" },
+  { "text": "Do you enjoy taking photos? What do you usually take pictures of?" },
+  { "text": "Tell me about a gift you received that was special to you." },
+  { "text": "What was the last book you read, and what did you think of it?" },
+  { "text": "Do you prefer mornings or evenings? Why?" },
+  { "text": "How do you usually get around your city — by bus, car, or on foot?" }
 ]
