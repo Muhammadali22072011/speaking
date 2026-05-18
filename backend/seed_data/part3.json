@@ -163,5 +163,110 @@
       "Slower growth means fewer new jobs",
       "Developing countries need to grow first"
     ]
+  },
+  {
+    "topic": "Students should be encouraged to participate in extracurricular activities.",
+    "for_bullets": [
+      "Helps in developing soft skills and teamwork",
+      "Provides a break from academic pressure",
+      "Can improve overall school performance",
+      "Builds self-confidence and new friendships"
+    ],
+    "against_bullets": [
+      "May distract from academic studies",
+      "Can be stressful if students are overcommitted",
+      "Not all students have an interest in extracurriculars",
+      "Adds extra cost for equipment, trips or clubs"
+    ]
+  },
+  {
+    "topic": "Is it better to keep a secret than to share it with a close friend?",
+    "for_bullets": [
+      "Protects the privacy of those involved",
+      "Avoids the risk of gossip spreading",
+      "Shows you can be trusted with information",
+      "Prevents unnecessary conflict or judgement"
+    ],
+    "against_bullets": [
+      "Sharing reduces emotional stress and pressure",
+      "A good friend can offer useful advice",
+      "Keeping everything inside can harm mental health",
+      "Strengthens trust and closeness in friendships"
+    ]
+  },
+  {
+    "topic": "Should children be allowed to use smartphones from an early age?",
+    "for_bullets": [
+      "Helps them learn digital skills early",
+      "Gives access to educational apps and content",
+      "Lets parents stay in contact for safety",
+      "Prepares them for a technology-driven future"
+    ],
+    "against_bullets": [
+      "Too much screen time can harm eyesight and sleep",
+      "Reduces time spent on real-world play and exercise",
+      "Exposes children to unsuitable online content",
+      "Can lead to addiction and shorter attention spans"
+    ]
+  },
+  {
+    "topic": "Are exams the best way to evaluate students' abilities?",
+    "for_bullets": [
+      "Provide a clear, measurable result",
+      "Treat all students by the same standard",
+      "Encourage students to study regularly",
+      "Prepare learners for university entrance"
+    ],
+    "against_bullets": [
+      "Cause high stress and anxiety",
+      "Test memory more than real understanding",
+      "Ignore creativity and soft skills",
+      "One bad day can ruin years of effort"
+    ]
+  },
+  {
+    "topic": "Should people work fewer hours per week to improve their quality of life?",
+    "for_bullets": [
+      "More time for family and personal interests",
+      "Lower stress and better mental health",
+      "Workers are more productive when rested",
+      "Encourages a healthier work-life balance"
+    ],
+    "against_bullets": [
+      "Could reduce overall income and savings",
+      "Some businesses may struggle to deliver on time",
+      "May slow down economic growth",
+      "Not all jobs can be done in fewer hours"
+    ]
+  },
+  {
+    "topic": "Is it more important to learn practical skills than academic subjects at school?",
+    "for_bullets": [
+      "Prepares students for real-life situations",
+      "Helps young people find jobs more easily",
+      "Builds independence and self-confidence",
+      "Makes lessons more engaging and useful"
+    ],
+    "against_bullets": [
+      "Academic subjects develop deep thinking",
+      "Universities mostly require academic results",
+      "Theory is the foundation for advanced skills",
+      "Practical skills can be learned later in life"
+    ]
+  },
+  {
+    "topic": "Should restaurants do more to offer healthy food options?",
+    "for_bullets": [
+      "Helps reduce rising rates of obesity",
+      "Encourages customers to eat more balanced meals",
+      "Healthy menus attract more families",
+      "Shows social responsibility from businesses"
+    ],
+    "against_bullets": [
+      "Customers should make their own choices",
+      "Healthy ingredients can be more expensive",
+      "People sometimes go to restaurants to enjoy a treat",
+      "Demand for fast food is still very high"
+    ]
   }
 ]
