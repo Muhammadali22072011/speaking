@@ -1,0 +1,90 @@
+[
+  {
+    "picture": { "emoji": "🤔", "label": "An important decision" },
+    "questions": [
+      "Tell me about an important decision you have made in your life.",
+      "How has this decision influenced you since then?",
+      "What factors have the biggest impact on the decisions people make?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🎓", "label": "Education and learning" },
+    "questions": [
+      "Describe a subject at school or university that you enjoyed.",
+      "Why do you think you enjoyed studying it more than others?",
+      "How important is education for a country's development?"
+    ]
+  },
+  {
+    "picture": { "emoji": "📱", "label": "Technology in daily life" },
+    "questions": [
+      "Tell me about a piece of technology you use every day.",
+      "How would your daily routine change without this technology?",
+      "Do you think technology brings people closer together or pushes them apart?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🌱", "label": "The environment" },
+    "questions": [
+      "Describe something you have done to help the environment.",
+      "How has people's awareness of the environment changed recently?",
+      "Whose responsibility is it to solve environmental problems — individuals, companies, or governments?"
+    ]
+  },
+  {
+    "picture": { "emoji": "✈️", "label": "Travel and culture" },
+    "questions": [
+      "Tell me about a place you visited that left a strong impression on you.",
+      "How did visiting this place change the way you see things?",
+      "Why is travelling important for understanding other cultures?"
+    ]
+  },
+  {
+    "picture": { "emoji": "💼", "label": "Work and career" },
+    "questions": [
+      "Describe a job or career you find interesting.",
+      "What skills would someone need to succeed in this kind of work?",
+      "How is the world of work likely to change in the next twenty years?"
+    ]
+  },
+  {
+    "picture": { "emoji": "👨‍👩‍👧‍👦", "label": "Family and relationships" },
+    "questions": [
+      "Tell me about a family member who has had an influence on you.",
+      "How have they shaped your character or interests?",
+      "How are family relationships changing in modern society?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🏆", "label": "A personal achievement" },
+    "questions": [
+      "Describe an achievement you are proud of.",
+      "What did you have to do to reach this achievement?",
+      "Why is it important for people to set goals in their lives?"
+    ]
+  },
+  {
+    "picture": { "emoji": "📖", "label": "Books and reading" },
+    "questions": [
+      "Tell me about a book or story that you found memorable.",
+      "How did it affect the way you think or feel about something?",
+      "Are people reading less than they used to? Why do you think that is?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🏙️", "label": "Cities and modern life" },
+    "questions": [
+      "Describe a city you have visited or would like to visit.",
+      "What do you think makes a city a good place to live?",
+      "What are the biggest challenges that large cities face today?"
+    ]
+  },
+  {
+    "picture": { "emoji": "🎵", "label": "Music in our lives" },
+    "questions": [
+      "Tell me about a type of music or a song that means a lot to you.",
+      "How does music affect your mood or daily routine?",
+      "Why does music play such an important role in different cultures?"
+    ]
+  }
+]

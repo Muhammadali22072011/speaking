@@ -1,0 +1,303 @@
+// Main controller, routing, and the exam loop.
+
+import { api } from '/static/api.js';
+import { createCountdown, formatTime } from '/static/timer.js';
+import { AudioRecorder } from '/static/recorder.js';
+import { renderPart1 } from '/static/parts/part1.js';
+import { renderPart2 } from '/static/parts/part2.js';
+import { renderPart3 } from '/static/parts/part3.js';
+import { renderResults } from '/static/parts/results.js';
+
+const main = document.getElementById('main');
+const toast = document.getElementById('toast');
+
+function showToast(msg, ms = 4500) {
+  toast.textContent = msg;
+  toast.classList.remove('hidden');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.add('hidden'), ms);
+}
+
+function mountTemplate(id) {
+  const tpl = document.getElementById(id);
+  main.innerHTML = '';
+  main.appendChild(tpl.content.cloneNode(true));
+  return main;
+}
+
+function delay(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+// --- Routing -----------------------------------------------------------
+
+const routes = {
+  home: renderHome,
+  progress: renderProgress,
+};
+
+function goto(name, payload) {
+  const fn = routes[name];
+  if (!fn) return;
+  fn(payload);
+}
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-route]');
+  if (t) {
+    e.preventDefault();
+    goto(t.dataset.route);
+  }
+});
+
+// --- Home --------------------------------------------------------------
+
+function renderHome() {
+  mountTemplate('tpl-home');
+  document.querySelectorAll('[data-start]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const parts = btn.dataset.start.split(',').map(Number);
+      runSession(parts);
+    });
+  });
+}
+
+// --- Exam loop ---------------------------------------------------------
+
+async function runSession(parts) {
+  let session;
+  try {
+    session = await api.startSession(parts);
+  } catch (e) {
+    showToast(e.detail || e.message || 'Failed to start session');
+    return;
+  }
+
+  if (!AudioRecorder.isSupported()) {
+    showToast('Microphone recording is not supported in this browser.');
+    return;
+  }
+
+  const recorder = new AudioRecorder();
+  try {
+    await recorder.ensureStream();
+  } catch (e) {
+    showToast('Microphone permission denied. Cannot continue.');
+    return;
+  }
+
+  // Build a flat queue of prompts annotated with part index
+  const queue = [];
+  session.parts.forEach((pp) => {
+    pp.prompts.forEach((p) => queue.push({ part: pp.part, prompt: p }));
+  });
+
+  let qIdx = 0;
+  let lastPart = null;
+
+  for (let i = 0; i < queue.length; i++) {
+    const { part, prompt } = queue[i];
+
+    if (lastPart !== null && lastPart !== part) {
+      await runIntermission(lastPart, part);
+    }
+    lastPart = part;
+
+    const partTotalInSession = queue.filter((x) => x.part === part).length;
+    const indexInPart = queue.slice(0, i + 1).filter((x) => x.part === part).length;
+
+    await runPrompt({
+      recorder,
+      sessionId: session.session_id,
+      part,
+      prompt,
+      questionIdx: qIdx,
+      counter: `Part ${part} · ${indexInPart} / ${partTotalInSession}`,
+      progress: (i + 1) / queue.length,
+    });
+    qIdx += 1;
+  }
+
+  recorder.release();
+
+  // Transcribe + grade screen
+  mountTemplate('tpl-grading');
+  let result;
+  try {
+    await api.finishSession(session.session_id);
+    result = await api.getResult(session.session_id);
+  } catch (e) {
+    showToast(e.detail || e.message || 'Grading failed. You can retry from the progress page.');
+    await delay(2500);
+    goto('home');
+    return;
+  }
+
+  mountTemplate('tpl-results');
+  document.querySelectorAll('[data-route]').forEach((el) => {
+    el.addEventListener('click', () => goto(el.dataset.route));
+  });
+  renderResults(main, result);
+}
+
+async function runIntermission(fromPart, toPart) {
+  mountTemplate('tpl-intermission');
+  const h = main.querySelector('h2');
+  const count = main.querySelector('.big-countdown');
+  h.textContent = `Part ${fromPart} complete · Part ${toPart} starting`;
+  for (let s = 5; s > 0; s--) {
+    count.textContent = String(s);
+    await delay(1000);
+  }
+}
+
+function renderPromptVisuals(prompt, visualEl, promptTextEl) {
+  if (prompt.type === 'personal' || prompt.type === 'compare') renderPart1(prompt, visualEl, promptTextEl);
+  else if (prompt.type === 'long_turn') renderPart2(prompt, visualEl, promptTextEl);
+  else if (prompt.type === 'for_against') renderPart3(prompt, visualEl, promptTextEl);
+}
+
+async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, counter, progress }) {
+  mountTemplate('tpl-part-active');
+  const counterEl = main.querySelector('.part-counter');
+  const progressEl = main.querySelector('.progress-fill');
+  const phaseEl = main.querySelector('.phase-label');
+  const timerEl = main.querySelector('.timer');
+  const visualEl = main.querySelector('.visual-area');
+  const promptTextEl = main.querySelector('.prompt-text');
+  const recIndicator = main.querySelector('.recording-indicator');
+  const liveEl = main.querySelector('.live-transcript');
+  const skipBtn = main.querySelector('.skip-btn');
+
+  counterEl.textContent = counter;
+  progressEl.style.width = `${Math.round(progress * 100)}%`;
+  renderPromptVisuals(prompt, visualEl, promptTextEl);
+
+  // Phase 1: preparation
+  await runPhase({
+    label: 'Preparation',
+    cls: 'prep',
+    seconds: prompt.prep_sec,
+    phaseEl, timerEl, skipBtn,
+  });
+
+  // Phase 2: recording
+  recIndicator.classList.remove('hidden');
+  liveEl.textContent = '';
+  await recorder.start({ onLiveText: (t) => { liveEl.textContent = t; } });
+
+  await runPhase({
+    label: 'Speaking',
+    cls: 'rec',
+    seconds: prompt.rec_sec,
+    phaseEl, timerEl, skipBtn,
+  });
+
+  recIndicator.classList.add('hidden');
+  const { blob, durationSec } = await recorder.stop();
+
+  // Show transcribing screen
+  mountTemplate('tpl-transcribing');
+
+  try {
+    await api.uploadAudio({
+      blob,
+      sessionId,
+      questionId: prompt.question_id,
+      questionIdx,
+      durationSec,
+    });
+  } catch (e) {
+    showToast(e.detail || e.message || 'Transcription failed for this answer.');
+    // continue anyway — we still let the user finish the session
+  }
+}
+
+function runPhase({ label, cls, seconds, phaseEl, timerEl, skipBtn }) {
+  return new Promise((resolve) => {
+    phaseEl.textContent = label;
+    phaseEl.className = `phase-label ${cls}`;
+    timerEl.className = `timer mono ${cls}`;
+    timerEl.textContent = formatTime(seconds);
+
+    const cd = createCountdown({
+      seconds,
+      onTick: (r) => { timerEl.textContent = formatTime(r); },
+      onDone: () => {
+        skipBtn.removeEventListener('click', skip);
+        resolve();
+      },
+    });
+
+    function skip() {
+      cd.stop();
+      skipBtn.removeEventListener('click', skip);
+      resolve();
+    }
+    skipBtn.addEventListener('click', skip);
+    cd.start();
+  });
+}
+
+// --- Progress page -----------------------------------------------------
+
+async function renderProgress() {
+  mountTemplate('tpl-progress');
+  let sessions;
+  try {
+    sessions = await api.progress();
+  } catch (e) {
+    showToast(e.detail || e.message || 'Failed to load progress');
+    return;
+  }
+
+  const tbody = main.querySelector('.sessions-table tbody');
+  tbody.innerHTML = '';
+  sessions.slice().reverse().forEach((s) => {
+    const tr = document.createElement('tr');
+    const date = new Date(s.started_at).toLocaleDateString();
+    tr.innerHTML = `
+      <td>${date}</td>
+      <td>${s.parts.join(', ')}</td>
+      <td>${s.score_75 ?? '—'}</td>
+      <td>${s.band ?? '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const completed = sessions.filter((s) => s.score_75 != null);
+  if (completed.length === 0) return;
+
+  // Wait for Chart.js to load (it's deferred from CDN)
+  const tryDraw = () => {
+    if (!window.Chart) return setTimeout(tryDraw, 100);
+    const canvas = document.getElementById('progress-chart');
+    if (!canvas) return;
+    new window.Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: completed.map((s) => new Date(s.started_at).toLocaleDateString()),
+        datasets: [{
+          label: 'Score / 75',
+          data: completed.map((s) => s.score_75),
+          borderColor: '#d4a259',
+          backgroundColor: 'rgba(212,162,89,0.15)',
+          tension: 0.25,
+          fill: true,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { min: 0, max: 75, ticks: { color: '#8b93a8' }, grid: { color: '#232a40' } },
+          x: { ticks: { color: '#8b93a8' }, grid: { color: '#232a40' } },
+        },
+        plugins: { legend: { labels: { color: '#e6e8ee' } } },
+      },
+    });
+  };
+  tryDraw();
+}
+
+// --- Boot --------------------------------------------------------------
+
+renderHome();

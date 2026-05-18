@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Multilevel Speaking Trainer</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand" data-route="home">Multilevel <span class="brand-accent">Speaking</span></div>
+      <nav>
+        <a href="#" data-route="home">Home</a>
+        <a href="#" data-route="progress">Progress</a>
+      </nav>
+    </header>
+
+    <main id="main"></main>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <!-- Templates -->
+  <template id="tpl-home">
+    <section class="screen home">
+      <h1 class="display">Practise the<br/>Multilevel<br/><span class="accent">Speaking</span> exam.</h1>
+      <p class="subtitle">Three parts. Fifteen minutes. AI-graded against the official CEFR-aligned criteria.</p>
+      <div class="grid-buttons">
+        <button class="big-btn" data-start="1">Part 1 only<span class="hint">~3.5 min</span></button>
+        <button class="big-btn" data-start="2">Part 2 only<span class="hint">~3 min</span></button>
+        <button class="big-btn" data-start="3">Part 3 only<span class="hint">~3 min</span></button>
+        <button class="big-btn primary" data-start="1,2,3">Full mock test<span class="hint">~15 min</span></button>
+      </div>
+      <p class="footnote">Make sure your microphone is connected. You'll be asked for permission when recording starts.</p>
+    </section>
+  </template>
+
+  <template id="tpl-part-active">
+    <section class="screen part-active">
+      <div class="part-header">
+        <div class="part-counter mono"></div>
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+      </div>
+
+      <div class="phase-label"></div>
+      <div class="timer mono">00</div>
+
+      <div class="visual-area"></div>
+      <div class="prompt-text serif"></div>
+
+      <div class="recording-indicator hidden">
+        <span class="dot"></span> Recording
+      </div>
+
+      <div class="live-transcript"></div>
+
+      <div class="controls">
+        <button class="skip-btn">Skip to next</button>
+      </div>
+    </section>
+  </template>
+
+  <template id="tpl-intermission">
+    <section class="screen intermission">
+      <h2 class="serif"></h2>
+      <p class="big-countdown mono">5</p>
+      <p class="muted">The next part starts automatically.</p>
+    </section>
+  </template>
+
+  <template id="tpl-transcribing">
+    <section class="screen transcribing">
+      <div class="spinner"></div>
+      <p class="serif">Transcribing your answers…</p>
+      <p class="muted">This takes about 10–30 seconds.</p>
+    </section>
+  </template>
+
+  <template id="tpl-grading">
+    <section class="screen grading">
+      <div class="spinner"></div>
+      <p class="serif">Claude is grading your session…</p>
+      <p class="muted">Comparing your performance against CEFR B1–C1 anchors.</p>
+    </section>
+  </template>
+
+  <template id="tpl-results">
+    <section class="screen results">
+      <div class="score-card">
+        <div class="score-number mono"></div>
+        <div class="score-meta">
+          <div class="score-out-of mono">/ 75</div>
+          <div class="score-band"></div>
+        </div>
+      </div>
+
+      <div class="criteria">
+        <div class="crit-row" data-key="discourse"><span class="crit-name">Discourse Management</span><span class="crit-score mono"></span></div>
+        <div class="crit-row" data-key="grammar"><span class="crit-name">Grammar Range &amp; Accuracy</span><span class="crit-score mono"></span></div>
+        <div class="crit-row" data-key="vocabulary"><span class="crit-name">Vocabulary Range &amp; Appropriacy</span><span class="crit-score mono"></span></div>
+        <div class="crit-row" data-key="pronunciation"><span class="crit-name">Pronunciation <span class="muted small">(estimated from transcript)</span></span><span class="crit-score mono"></span></div>
+        <div class="crit-row total"><span class="crit-name">Raw total</span><span class="crit-score mono"></span></div>
+      </div>
+
+      <details class="feedback-block" open>
+        <summary class="serif">Examiner feedback</summary>
+        <div class="feedback-body"></div>
+      </details>
+
+      <details class="tips-block">
+        <summary class="serif">Improvement tips</summary>
+        <ul class="tips-list"></ul>
+      </details>
+
+      <details class="answers-block">
+        <summary class="serif">Your answers</summary>
+        <div class="answers-list"></div>
+      </details>
+
+      <button class="big-btn primary" data-route="home">Try again</button>
+    </section>
+  </template>
+
+  <template id="tpl-progress">
+    <section class="screen progress">
+      <h2 class="serif">Your progress</h2>
+      <div class="chart-wrap"><canvas id="progress-chart"></canvas></div>
+      <table class="sessions-table">
+        <thead><tr><th>Date</th><th>Parts</th><th>Score</th><th>Band</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </template>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

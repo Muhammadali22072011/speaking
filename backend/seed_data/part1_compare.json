@@ -1,0 +1,74 @@
+[
+  {
+    "pic1": { "emoji": "🏃", "label": "Outdoor running" },
+    "pic2": { "emoji": "🏋️", "label": "Indoor gym" },
+    "questions": [
+      "What are the people in these pictures doing?",
+      "Which type of exercise would you prefer, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "📚", "label": "Reading a paper book" },
+    "pic2": { "emoji": "📱", "label": "Reading on a phone" },
+    "questions": [
+      "What are these people doing in each picture?",
+      "Which way of reading do you think is better, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "🍳", "label": "Cooking at home" },
+    "pic2": { "emoji": "🍽️", "label": "Eating at a restaurant" },
+    "questions": [
+      "Describe what is happening in each picture.",
+      "Which option would you choose on a weekend, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "🚗", "label": "Travelling by car" },
+    "pic2": { "emoji": "🚆", "label": "Travelling by train" },
+    "questions": [
+      "What can you see in these two pictures?",
+      "Which way of travelling do you find more enjoyable, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "🏫", "label": "Studying at school" },
+    "pic2": { "emoji": "💻", "label": "Studying online" },
+    "questions": [
+      "What are the students doing in each picture?",
+      "Which way of learning do you prefer, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "🌆", "label": "Living in a big city" },
+    "pic2": { "emoji": "🌾", "label": "Living in a village" },
+    "questions": [
+      "Describe the two places shown in the pictures.",
+      "Where would you prefer to live, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "🎬", "label": "Cinema" },
+    "pic2": { "emoji": "📺", "label": "Streaming at home" },
+    "questions": [
+      "What are people doing in each picture?",
+      "Which way of watching films do you enjoy more, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "🛍️", "label": "Shopping in a store" },
+    "pic2": { "emoji": "🛒", "label": "Shopping online" },
+    "questions": [
+      "What is happening in each picture?",
+      "Which type of shopping do you usually prefer, and why?"
+    ]
+  },
+  {
+    "pic1": { "emoji": "👨‍👩‍👧", "label": "Spending time with family" },
+    "pic2": { "emoji": "👯", "label": "Spending time with friends" },
+    "questions": [
+      "Describe what the people are doing in these pictures.",
+      "Which do you find more important in your life, and why?"
+    ]
+  }
+]

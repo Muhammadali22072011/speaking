@@ -1,0 +1,167 @@
+[
+  {
+    "topic": "Should secondary schools require students to wear uniforms?",
+    "for_bullets": [
+      "Reduces social comparison and bullying",
+      "Saves families money on everyday clothes",
+      "Creates a sense of equality at school",
+      "Helps students focus on studies"
+    ],
+    "against_bullets": [
+      "Limits self-expression and individuality",
+      "Uniforms can be uncomfortable to wear daily",
+      "Doesn't prepare students for adult choices",
+      "Extra cost for families on a tight budget"
+    ]
+  },
+  {
+    "topic": "Should young people start working part-time while still studying?",
+    "for_bullets": [
+      "Builds real-world experience early",
+      "Teaches money management and responsibility",
+      "Develops communication and teamwork skills",
+      "Helps cover personal expenses"
+    ],
+    "against_bullets": [
+      "Leaves less time for studying",
+      "Can lead to tiredness and stress",
+      "Reduces time for hobbies and friends",
+      "May affect academic performance"
+    ]
+  },
+  {
+    "topic": "Should governments invest more in public transport than in roads for cars?",
+    "for_bullets": [
+      "Reduces traffic and air pollution",
+      "More affordable for ordinary citizens",
+      "Makes cities easier to move around in",
+      "Encourages a healthier way of life"
+    ],
+    "against_bullets": [
+      "Cars give people more flexibility",
+      "Public transport is not always reliable",
+      "Some areas are too spread out for buses",
+      "Car industry creates many jobs"
+    ]
+  },
+  {
+    "topic": "Is it better to live in a big city or in the countryside?",
+    "for_bullets": [
+      "Cities offer more career opportunities",
+      "Better access to education and hospitals",
+      "Wider range of cultural events",
+      "More diverse and international atmosphere"
+    ],
+    "against_bullets": [
+      "Countryside has cleaner air and less noise",
+      "Stronger sense of community in villages",
+      "Cost of living is much lower",
+      "Closer connection with nature"
+    ]
+  },
+  {
+    "topic": "Should smartphones be banned in classrooms?",
+    "for_bullets": [
+      "Reduces distraction during lessons",
+      "Improves concentration on the teacher",
+      "Encourages real face-to-face interaction",
+      "Helps prevent cheating in tests"
+    ],
+    "against_bullets": [
+      "Phones are useful learning tools",
+      "Students can access information quickly",
+      "Needed for emergencies during the day",
+      "Teaches responsible technology use"
+    ]
+  },
+  {
+    "topic": "Should English be a compulsory subject from primary school?",
+    "for_bullets": [
+      "Children learn languages faster than adults",
+      "Opens up future study and job opportunities",
+      "Helps with travel and global communication",
+      "Improves access to internet resources"
+    ],
+    "against_bullets": [
+      "May reduce focus on the native language",
+      "Adds pressure on young children",
+      "Not every child needs English in life",
+      "Lack of qualified teachers in some regions"
+    ]
+  },
+  {
+    "topic": "Is studying abroad better than studying in your own country?",
+    "for_bullets": [
+      "Exposure to a different culture and language",
+      "Often higher quality of education",
+      "Builds independence and confidence",
+      "Stronger CV for international jobs"
+    ],
+    "against_bullets": [
+      "Very expensive for most families",
+      "Long separation from family and friends",
+      "Difficult to adapt to a new environment",
+      "Local universities understand the local job market"
+    ]
+  },
+  {
+    "topic": "Is fast food the main cause of unhealthy eating habits today?",
+    "for_bullets": [
+      "Cheap and easily available everywhere",
+      "Heavily advertised to young people",
+      "Often high in salt, sugar and fat",
+      "Encourages eating quickly without thinking"
+    ],
+    "against_bullets": [
+      "Lack of cooking skills also matters",
+      "Busy lifestyles push people to convenience food",
+      "Schools and families shape eating habits",
+      "Stress and sleep affect diet too"
+    ]
+  },
+  {
+    "topic": "Should children spend more time on sports than on academic study?",
+    "for_bullets": [
+      "Sport keeps the body healthy",
+      "Teaches teamwork and discipline",
+      "Reduces stress and improves mood",
+      "Builds confidence and leadership"
+    ],
+    "against_bullets": [
+      "Academic study shapes future careers",
+      "Too much sport may lead to injuries",
+      "Exams are still the main way to enter university",
+      "Not every child enjoys competitive sport"
+    ]
+  },
+  {
+    "topic": "Is social media doing more harm than good to young people?",
+    "for_bullets": [
+      "Encourages constant comparison with others",
+      "Reduces time for sleep and study",
+      "Spreads misleading information quickly",
+      "Can lead to anxiety and low self-esteem"
+    ],
+    "against_bullets": [
+      "Helps young people stay in touch with friends",
+      "Useful for learning new skills",
+      "Gives a voice to ordinary people",
+      "Creates new career opportunities online"
+    ]
+  },
+  {
+    "topic": "Should governments do more to protect the environment, even if it slows the economy?",
+    "for_bullets": [
+      "Climate change affects everyone's future",
+      "Clean air and water improve health",
+      "Green industries can create new jobs",
+      "Protects nature for future generations"
+    ],
+    "against_bullets": [
+      "Strict rules may close some factories",
+      "Could raise prices for ordinary people",
+      "Slower growth means fewer new jobs",
+      "Developing countries need to grow first"
+    ]
+  }
+]
