@@ -9,14 +9,12 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    anthropic_api_key: str
-    openai_api_key: str
+    google_api_key: str
     database_url: str = "sqlite:///./multilevel.db"
     audio_upload_dir: str = "./audio_uploads"
     debug: bool = False
 
-    claude_model: str = "claude-opus-4-7"
-    whisper_model: str = "whisper-1"
+    gemini_model: str = "gemini-2.0-flash"
 
     @property
     def audio_dir(self) -> Path:
@@ -35,8 +33,8 @@ def get_settings() -> Settings:
             _settings = Settings()
         except Exception as e:
             raise RuntimeError(
-                "Failed to load settings. Ensure .env exists with "
-                "ANTHROPIC_API_KEY and OPENAI_API_KEY. "
+                "Failed to load settings. Ensure .env exists with GOOGLE_API_KEY. "
+                "Get a free key at https://aistudio.google.com/apikey. "
                 f"Underlying error: {e}"
             ) from e
     return _settings

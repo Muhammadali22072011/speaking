@@ -1,14 +1,12 @@
-"""Claude API wrapper for generating new exam questions."""
+"""LLM-based question generator (Gemini, free tier)."""
 import json
 import logging
 import re
 from typing import Any
 
-from anthropic import Anthropic, APIError
-
-from backend.config import get_settings
 from backend import database as dbmod
 from backend.models import Question
+from backend.services.llm_client import generate_text, LLMError
 
 log = logging.getLogger(__name__)
 
@@ -16,10 +14,12 @@ log = logging.getLogger(__name__)
 PART_INSTRUCTIONS = {
     1: 'Generate {count} personal questions suitable for Part 1 of the Multilevel Speaking exam. Each should be answerable in 30 seconds by a B2 candidate, about everyday topics (hobbies, family, work, hometown, education, travel, food, technology, etc.). Avoid politics and controversy. Output a JSON array of objects: [{{"text": "..."}}, ...]',
 
-    2: 'Generate {count} Part 2 prompts. Each consists of a thematic label, an emoji to represent the picture (since we don\'t have images yet), and three questions following a personal → analytical → abstract gradient. Topics: decisions, education, technology, environment, relationships, work, culture. Output JSON array: [{{"label": "...", "emoji": "🎓", "questions": ["personal...", "analytical...", "abstract..."]}}, ...]',
+    2: 'Generate {count} Part 2 prompts. Each consists of a thematic label, an emoji to represent the picture (since we do not have images yet), and three questions following a personal -> analytical -> abstract gradient. Topics: decisions, education, technology, environment, relationships, work, culture. Output JSON array: [{{"label": "...", "emoji": "🎓", "questions": ["personal...", "analytical...", "abstract..."]}}, ...]',
 
     3: 'Generate {count} Part 3 for/against topics. Each topic must be debatable with clear arguments on both sides. Provide 4 "for" bullets and 4 "against" bullets, each one short phrase (under 12 words). Avoid topics that are too sensitive. Output JSON: [{{"topic": "...", "for_bullets": [...], "against_bullets": [...]}}, ...]',
 }
+
+GENERATOR_SYSTEM = "You are a curriculum designer for the Uzbekistan National Multilevel English exam. Output only the requested JSON array, no commentary, no code fences."
 
 
 def _strip_code_fence(text: str) -> str:
@@ -71,33 +71,18 @@ def _subtype_for_part(part: int) -> str:
 
 
 def generate_questions(part: int, count: int) -> list[int]:
-    """Generate `count` new questions for the given part via Claude and insert them.
-
-    Returns the list of new Question IDs.
-    """
     if part not in (1, 2, 3):
         raise ValueError(f"Invalid part: {part}")
 
-    settings = get_settings()
-    client = Anthropic(api_key=settings.anthropic_api_key)
-
     prompt = PART_INSTRUCTIONS[part].format(count=count)
-    log.info("Generating %d questions for part %d via Claude", count, part)
+    log.info("Generating %d questions for part %d via Gemini", count, part)
 
     try:
-        resp = client.messages.create(
-            model=settings.claude_model,
-            max_tokens=2000,
-            system="You are a curriculum designer for the Uzbekistan National Multilevel English exam. Output only the requested JSON array, no commentary, no code fences.",
-            messages=[{"role": "user", "content": prompt}],
-        )
-    except APIError as e:
-        log.exception("Claude generator API failed")
-        raise RuntimeError(f"Claude generator API failed: {e}") from e
+        text = generate_text(GENERATOR_SYSTEM, prompt, max_output_tokens=2000)
+    except LLMError as e:
+        raise RuntimeError(str(e)) from e
 
-    text = "".join(block.text for block in resp.content if getattr(block, "type", None) == "text")
     cleaned = _strip_code_fence(text)
-
     try:
         items: list[Any] = json.loads(cleaned)
     except json.JSONDecodeError as e:
@@ -109,8 +94,6 @@ def generate_questions(part: int, count: int) -> list[int]:
 
     validator = {1: _validate_part1, 2: _validate_part2, 3: _validate_part3}[part]
     subtype = _subtype_for_part(part)
-    # Part 1 generation only produces personal questions (compare requires images)
-    subtypes_for_part1_only_personal = True  # noqa — kept for clarity
 
     validated: list[dict] = []
     for item in items:

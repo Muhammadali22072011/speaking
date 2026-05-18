@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
@@ -9,7 +8,6 @@ from backend.config import get_settings
 from backend.deps import get_db
 from backend.models import Answer, Question, Session
 from backend.schemas import TranscribeResponse
-from backend.services.whisper import transcribe_file
 
 router = APIRouter()
 log = logging.getLogger(__name__)
@@ -22,12 +20,18 @@ def _word_count(text: str) -> int:
 @router.post("/audio/transcribe", response_model=TranscribeResponse)
 async def transcribe(
     audio: UploadFile = File(...),
+    transcript: str = Form(""),
     session_id: int = Form(...),
     question_id: int = Form(...),
     question_idx: int = Form(...),
     duration_sec: float = Form(0.0),
     db: SASession = Depends(get_db),
 ) -> TranscribeResponse:
+    """Persist the recorded audio + the transcript captured in the browser.
+
+    Transcription happens client-side via the Web Speech API; the backend just
+    stores both artefacts so we can show audio playback on the results screen.
+    """
     session = db.get(Session, session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -44,12 +48,9 @@ async def transcribe(
     with open(audio_path, "wb") as f:
         f.write(contents)
 
-    try:
-        transcript = transcribe_file(audio_path)
-    except RuntimeError as e:
-        raise HTTPException(status_code=502, detail=f"Transcription failed: {e}")
-
+    transcript = (transcript or "").strip()
     wc = _word_count(transcript)
+
     existing = (
         db.query(Answer)
         .filter(Answer.session_id == session_id, Answer.question_idx == question_idx)

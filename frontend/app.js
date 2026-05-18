@@ -179,10 +179,11 @@ async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, count
     phaseEl, timerEl, skipBtn,
   });
 
-  // Phase 2: recording
+  // Phase 2: recording. Browser Web Speech API gives us the live AND final transcript.
   recIndicator.classList.remove('hidden');
   liveEl.textContent = '';
-  await recorder.start({ onLiveText: (t) => { liveEl.textContent = t; } });
+  let lastTranscript = '';
+  await recorder.start({ onLiveText: (t) => { lastTranscript = t; liveEl.textContent = t; } });
 
   await runPhase({
     label: 'Speaking',
@@ -193,13 +194,15 @@ async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, count
 
   recIndicator.classList.add('hidden');
   const { blob, durationSec } = await recorder.stop();
+  const finalTranscript = (recorder.liveText || lastTranscript || '').trim();
 
-  // Show transcribing screen
+  // Show uploading screen
   mountTemplate('tpl-transcribing');
 
   try {
     await api.uploadAudio({
       blob,
+      transcript: finalTranscript,
       sessionId,
       questionId: prompt.question_id,
       questionIdx,

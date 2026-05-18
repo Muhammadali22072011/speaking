@@ -43,9 +43,10 @@ export const api = {
     return request('/api/progress');
   },
 
-  uploadAudio({ blob, sessionId, questionId, questionIdx, durationSec }) {
+  uploadAudio({ blob, transcript, sessionId, questionId, questionIdx, durationSec }) {
     const fd = new FormData();
     fd.append('audio', blob, `${questionIdx}.webm`);
+    fd.append('transcript', transcript || '');
     fd.append('session_id', sessionId);
     fd.append('question_id', questionId);
     fd.append('question_idx', questionIdx);

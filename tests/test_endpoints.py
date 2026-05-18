@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
@@ -65,17 +65,13 @@ def test_progress_empty():
 
 
 def test_generate_questions_mocked():
-    """Question generation endpoint round-trip with mocked Claude."""
+    """Question generation endpoint round-trip with mocked LLM."""
     fake = (
         '[{"text": "Tell me about a memorable journey you have made."},'
         ' {"text": "What kinds of skills are most useful in everyday life?"}]'
     )
 
-    block = MagicMock(); block.type = "text"; block.text = fake
-    resp = MagicMock(); resp.content = [block]
-
-    with patch("backend.services.claude_generator.Anthropic") as MockAnthropic:
-        MockAnthropic.return_value.messages.create.return_value = resp
+    with patch("backend.services.claude_generator.generate_text", return_value=fake):
         with _client() as c:
             r = c.post("/api/questions/generate", json={"part": 1, "count": 2})
 
@@ -102,11 +98,8 @@ def test_finish_session_with_mocked_grading():
         '{"discourse": 6, "grammar": 6, "vocabulary": 6, "pronunciation": 6,'
         '"feedback": {"discourse":"ok","grammar":"ok","vocabulary":"ok","pronunciation":"ok","overall":"B2","improvement_tips":["t1"]}}'
     )
-    block = MagicMock(); block.type = "text"; block.text = fake_grade_json
-    resp = MagicMock(); resp.content = [block]
 
-    with patch("backend.services.claude_grader.Anthropic") as MockAnthropic:
-        MockAnthropic.return_value.messages.create.return_value = resp
+    with patch("backend.services.claude_grader.generate_text", return_value=fake_grade_json):
         with _client() as c:
             r = c.post("/api/sessions/start", json={"parts": [1]})
             session_id = r.json()["session_id"]
