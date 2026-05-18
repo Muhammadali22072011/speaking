@@ -35,6 +35,16 @@ const routes = {
   progress: renderProgress,
 };
 
+// Tracks whether an exam session is currently running so the topbar nav
+// can't accidentally reset the user back to the home screen mid-test.
+let sessionActive = false;
+let activeSession = null;
+
+function setSessionActive(on) {
+  sessionActive = on;
+  document.body.classList.toggle('in-session', on);
+}
+
 function goto(name, payload) {
   const fn = routes[name];
   if (!fn) return;
@@ -44,11 +54,23 @@ function goto(name, payload) {
 
 document.addEventListener('click', (e) => {
   const t = e.target.closest('[data-route]');
-  if (t) {
-    e.preventDefault();
-    goto(t.dataset.route);
+  if (!t) return;
+  e.preventDefault();
+  if (sessionActive) {
+    const ok = window.confirm('Leave the test in progress? Your answers so far will be lost.');
+    if (!ok) return;
+    abortActiveSession();
   }
+  goto(t.dataset.route);
 });
+
+function abortActiveSession() {
+  if (!activeSession) return;
+  activeSession.aborted = true;
+  try { activeSession.recorder?.release(); } catch (e) { /* */ }
+  activeSession = null;
+  setSessionActive(false);
+}
 
 // Voice-over master toggle in the topbar.
 function syncAudioToggle() {
@@ -84,6 +106,8 @@ function renderHome() {
 // --- Exam loop ---------------------------------------------------------
 
 async function runSession(parts) {
+  if (sessionActive) return;
+
   let session;
   try {
     session = await api.startSession(parts);
@@ -105,6 +129,10 @@ async function runSession(parts) {
     return;
   }
 
+  const ctx = { aborted: false, recorder };
+  activeSession = ctx;
+  setSessionActive(true);
+
   // Build a flat queue of prompts annotated with part index
   const queue = [];
   session.parts.forEach((pp) => {
@@ -115,10 +143,12 @@ async function runSession(parts) {
   let lastPart = null;
 
   for (let i = 0; i < queue.length; i++) {
+    if (ctx.aborted) return;
     const { part, prompt } = queue[i];
 
     if (lastPart !== null && lastPart !== part) {
       await runIntermission(lastPart, part);
+      if (ctx.aborted) return;
     }
     lastPart = part;
 
@@ -126,6 +156,7 @@ async function runSession(parts) {
     const indexInPart = queue.slice(0, i + 1).filter((x) => x.part === part).length;
 
     await runPrompt({
+      ctx,
       recorder,
       sessionId: session.session_id,
       part,
@@ -134,6 +165,7 @@ async function runSession(parts) {
       counter: `Part ${part} · ${indexInPart} / ${partTotalInSession}`,
       progress: (i + 1) / queue.length,
     });
+    if (ctx.aborted) return;
     qIdx += 1;
   }
 
@@ -148,14 +180,16 @@ async function runSession(parts) {
   } catch (e) {
     showToast(e.detail || e.message || 'Grading failed. You can retry from the progress page.');
     await delay(2500);
+    activeSession = null;
+    setSessionActive(false);
     goto('home');
     return;
   }
 
+  activeSession = null;
+  setSessionActive(false);
+
   mountTemplate('tpl-results');
-  document.querySelectorAll('[data-route]').forEach((el) => {
-    el.addEventListener('click', () => goto(el.dataset.route));
-  });
   renderResults(main, result);
 }
 
@@ -176,7 +210,7 @@ function renderPromptVisuals(prompt, visualEl, promptTextEl) {
   else if (prompt.type === 'for_against') renderPart3(prompt, visualEl, promptTextEl);
 }
 
-async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, counter, progress }) {
+async function runPrompt({ ctx, recorder, sessionId, part, prompt, questionIdx, counter, progress }) {
   mountTemplate('tpl-part-active');
   const counterEl = main.querySelector('.part-counter');
   const progressEl = main.querySelector('.progress-fill');
@@ -207,8 +241,9 @@ async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, count
     label: 'Preparation',
     cls: 'prep',
     seconds: prompt.prep_sec,
-    phaseEl, timerEl, skipBtn,
+    phaseEl, timerEl, skipBtn, ctx,
   });
+  if (ctx?.aborted) return;
 
   // Phase 2: recording. Stop any voice-over so it doesn't bleed into the microphone.
   speech.cancel();
@@ -222,11 +257,12 @@ async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, count
     label: 'Speaking',
     cls: 'rec',
     seconds: prompt.rec_sec,
-    phaseEl, timerEl, skipBtn,
+    phaseEl, timerEl, skipBtn, ctx,
   });
 
   recIndicator.classList.add('hidden');
   const { blob, durationSec } = await recorder.stop();
+  if (ctx?.aborted) return;
   const finalTranscript = (recorder.liveText || lastTranscript || '').trim();
   const prosody = recorder.prosodySummary || null;
 
@@ -249,28 +285,43 @@ async function runPrompt({ recorder, sessionId, part, prompt, questionIdx, count
   }
 }
 
-function runPhase({ label, cls, seconds, phaseEl, timerEl, skipBtn }) {
+function runPhase({ label, cls, seconds, phaseEl, timerEl, skipBtn, ctx }) {
   return new Promise((resolve) => {
     phaseEl.textContent = label;
     phaseEl.className = `phase-label ${cls}`;
     timerEl.className = `timer mono ${cls}`;
     timerEl.textContent = formatTime(seconds);
 
+    let abortPoll = null;
+    const cleanup = () => {
+      skipBtn.removeEventListener('click', skip);
+      if (abortPoll) { clearInterval(abortPoll); abortPoll = null; }
+    };
+
     const cd = createCountdown({
       seconds,
       onTick: (r) => { timerEl.textContent = formatTime(r); },
-      onDone: () => {
-        skipBtn.removeEventListener('click', skip);
-        resolve();
-      },
+      onDone: () => { cleanup(); resolve(); },
     });
 
     function skip() {
       cd.stop();
-      skipBtn.removeEventListener('click', skip);
+      cleanup();
       resolve();
     }
     skipBtn.addEventListener('click', skip);
+
+    // Bail out of the countdown if the session is aborted from elsewhere.
+    if (ctx) {
+      abortPoll = setInterval(() => {
+        if (ctx.aborted) {
+          cd.stop();
+          cleanup();
+          resolve();
+        }
+      }, 200);
+    }
+
     cd.start();
   });
 }
