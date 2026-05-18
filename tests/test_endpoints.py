@@ -292,6 +292,45 @@ def test_transcribe_endpoint_falls_back_to_browser_when_whisper_fails():
             db.close()
 
 
+def test_c1_sample_endpoint_returns_generated_text():
+    """GET /api/questions/{id}/c1-sample should return the LLM-generated
+    model answer for a Part 3 (for/against) question."""
+    from backend.services import c1_sample as c1mod
+
+    c1mod.clear_cache()
+    fake = '{"answer": "It is often argued that homework stifles creativity..."}'
+
+    with patch("backend.services.c1_sample.generate_text", return_value=fake):
+        with _client() as c:
+            # Pick any seeded part-3 question.
+            r = c.post("/api/sessions/start", json={"parts": [3]})
+            qid = r.json()["parts"][0]["prompts"][0]["question_id"]
+
+            r2 = c.get(f"/api/questions/{qid}/c1-sample")
+            assert r2.status_code == 200, r2.text
+            body = r2.json()
+            assert body["question_id"] == qid
+            assert body["text"].startswith("It is often argued")
+
+
+def test_c1_sample_endpoint_rejects_non_part3_question():
+    """The endpoint should 400 if the question is not a for/against topic."""
+    with _client() as c:
+        r = c.post("/api/sessions/start", json={"parts": [1]})
+        # Part 1 personal question — not a for/against topic.
+        qid = r.json()["parts"][0]["prompts"][0]["question_id"]
+
+        r2 = c.get(f"/api/questions/{qid}/c1-sample")
+        assert r2.status_code == 400
+        assert "for/against" in r2.json()["detail"].lower()
+
+
+def test_c1_sample_endpoint_404_on_unknown_question():
+    with _client() as c:
+        r2 = c.get("/api/questions/9999/c1-sample")
+        assert r2.status_code == 404
+
+
 def test_finish_session_with_mocked_grading():
     """End-to-end: start session, fake an answer, finish, fetch result."""
     from backend import database as dbmod

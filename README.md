@@ -98,6 +98,8 @@ The browser records audio, shows a live Web Speech API draft to the user, and ru
 
 Pronunciation is **estimated from the transcript** (the LLM doesn't hear audio). The UI flags this.
 
+On the results screen, every **Part 3 (for/against)** answer card has a **"🔊 Hear a C1 example"** button. It asks Groq Llama for a 130-160-word model answer to the exact same topic at C1 level — balanced arguments, complex grammar, sophisticated linkers — and reads it aloud through the browser's SpeechSynthesis voice (the same one used for the prompts). The result is also displayed under the button so you can read along.
+
 ## Adding questions manually
 
 Edit JSON files in `backend/seed_data/`, delete `multilevel.db`, restart.

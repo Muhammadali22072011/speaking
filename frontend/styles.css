@@ -902,6 +902,67 @@ details[open] summary { margin-bottom: 0.75rem; }
 .answer-card .raw-transcript summary::after { content: ''; }
 .answer-card audio { width: 100%; height: 34px; }
 
+.c1-sample {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.c1-sample-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(212, 162, 89, 0.12);
+  border: 1px solid var(--accent-soft);
+  color: var(--accent-2);
+  padding: 0.55rem 0.95rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.c1-sample-btn:hover:not(:disabled) {
+  background: rgba(212, 162, 89, 0.2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.c1-sample-btn:disabled { cursor: progress; opacity: 0.7; }
+.c1-sample-btn.playing {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+.c1-sample-btn.playing:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: var(--danger);
+  color: #fecaca;
+}
+.c1-icon { font-size: 1rem; line-height: 1; }
+.c1-sample-text {
+  background: rgba(212, 162, 89, 0.06);
+  border: 1px solid var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  font-family: var(--serif);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--text);
+  font-style: italic;
+}
+.c1-sample-text.error {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+  border-left-color: var(--danger);
+  color: var(--text-dim);
+  font-style: normal;
+  font-family: var(--sans);
+  font-size: 0.88rem;
+}
+
 /* ---- Progress page -------------------------------------------------- */
 .progress { max-width: 980px; }
 .progress h2 {

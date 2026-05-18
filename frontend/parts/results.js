@@ -1,5 +1,8 @@
 // Render the results screen given a result payload.
 
+import { api } from '/static/api.js';
+import { speech } from '/static/speech.js';
+
 function renderQuestionText(answer) {
   const d = answer.question_data;
   if (answer.question_subtype === 'personal') return d.text || '';
@@ -13,6 +16,75 @@ function renderQuestionText(answer) {
     return d.topic || '';
   }
   return '';
+}
+
+function attachC1SampleButton(card, answer) {
+  if (answer.question_subtype !== 'for_against') return;
+  if (!speech.supported) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'c1-sample';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'c1-sample-btn';
+  btn.innerHTML = '<span class="c1-icon">🔊</span><span class="c1-label">Hear a C1 example</span>';
+
+  const textEl = document.createElement('div');
+  textEl.className = 'c1-sample-text hidden';
+
+  let cachedText = '';
+  let playing = false;
+
+  function setLabel(text, { busy = false, playing: isPlaying = false } = {}) {
+    btn.querySelector('.c1-label').textContent = text;
+    btn.disabled = busy;
+    btn.classList.toggle('busy', busy);
+    btn.classList.toggle('playing', isPlaying);
+  }
+
+  async function speakSample(text) {
+    playing = true;
+    setLabel('Stop', { playing: true });
+    await speech.speak(text, { rate: 0.95 });
+    playing = false;
+    setLabel('Replay C1 example');
+  }
+
+  btn.addEventListener('click', async () => {
+    if (playing) {
+      speech.cancel();
+      playing = false;
+      setLabel(cachedText ? 'Replay C1 example' : 'Hear a C1 example');
+      return;
+    }
+    if (cachedText) {
+      speakSample(cachedText);
+      return;
+    }
+    setLabel('Generating…', { busy: true });
+    try {
+      const res = await api.c1Sample(answer.question_id);
+      cachedText = res.text || '';
+    } catch (e) {
+      setLabel('Try again', { busy: false });
+      textEl.textContent = e.detail || e.message || 'Could not generate C1 example.';
+      textEl.classList.remove('hidden');
+      textEl.classList.add('error');
+      return;
+    }
+    if (!cachedText) {
+      setLabel('No sample available', { busy: false });
+      return;
+    }
+    textEl.textContent = cachedText;
+    textEl.classList.remove('hidden', 'error');
+    speakSample(cachedText);
+  });
+
+  wrap.appendChild(btn);
+  wrap.appendChild(textEl);
+  card.appendChild(wrap);
 }
 
 export function renderResults(root, result) {
@@ -102,6 +174,7 @@ export function renderResults(root, result) {
     audio.preload = 'none';
     audio.src = a.audio_url;
     card.appendChild(audio);
+    attachC1SampleButton(card, a);
     answersList.appendChild(card);
   });
 }

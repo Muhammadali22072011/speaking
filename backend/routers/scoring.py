@@ -143,6 +143,7 @@ async def get_result(session_id: int, db: SASession = Depends(get_db)) -> Sessio
         answer_payloads.append(
             AnswerOut(
                 id=a.id,
+                question_id=a.question_id,
                 question_idx=a.question_idx,
                 question_part=q.part if q else 0,
                 question_subtype=q.subtype if q else "",
