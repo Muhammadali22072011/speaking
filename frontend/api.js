@@ -68,4 +68,8 @@ export const api = {
     fd.append('duration_sec', durationSec.toFixed(2));
     return request('/api/audio/transcribe', { method: 'POST', body: fd });
   },
+
+  c1Sample(questionId) {
+    return request(`/api/questions/${questionId}/c1-sample`);
+  },
 };

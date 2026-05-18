@@ -79,6 +79,11 @@ class ClearCustomQuestionsResponse(BaseModel):
     deleted: int
 
 
+class C1SampleResponse(BaseModel):
+    question_id: int
+    text: str
+
+
 class GradeFeedback(BaseModel):
     discourse: str
     grammar: str
@@ -103,6 +108,7 @@ class GradeResponse(BaseModel):
 
 class AnswerOut(BaseModel):
     id: int
+    question_id: int
     question_idx: int
     question_part: int
     question_subtype: str

@@ -1,14 +1,19 @@
 import json
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from sqlalchemy.orm import Session as SASession
 
+from backend.deps import get_db
+from backend.models import Question
 from backend.schemas import (
+    C1SampleResponse,
     ClearCustomQuestionsResponse,
     CustomQuestionsStats,
     GenerateQuestionsRequest,
     GenerateQuestionsResponse,
     UploadQuestionsResponse,
 )
+from backend.services.c1_sample import generate_c1_sample
 from backend.services.claude_generator import generate_questions
 from backend.services.question_bank import (
     clear_custom_questions,
@@ -67,3 +72,36 @@ async def get_custom_stats() -> CustomQuestionsStats:
 @router.delete("/custom", response_model=ClearCustomQuestionsResponse)
 async def clear_custom() -> ClearCustomQuestionsResponse:
     return ClearCustomQuestionsResponse(deleted=clear_custom_questions())
+
+
+@router.get("/{question_id}/c1-sample", response_model=C1SampleResponse)
+async def get_c1_sample(
+    question_id: int,
+    db: SASession = Depends(get_db),
+) -> C1SampleResponse:
+    """Return a C1-level model answer for a Part 3 (for/against) question.
+
+    Used by the results page so the learner can hear what a C1 response
+    to the same topic would sound like via the browser's SpeechSynthesis.
+    """
+    q = db.get(Question, question_id)
+    if not q:
+        raise HTTPException(status_code=404, detail="Question not found")
+    if q.subtype != "for_against":
+        raise HTTPException(
+            status_code=400,
+            detail="C1 examples are only available for Part 3 for/against topics",
+        )
+
+    data = q.data or {}
+    try:
+        text = generate_c1_sample(
+            question_id=question_id,
+            topic=data.get("topic", ""),
+            for_bullets=data.get("for_bullets", []) or [],
+            against_bullets=data.get("against_bullets", []) or [],
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    return C1SampleResponse(question_id=question_id, text=text)
