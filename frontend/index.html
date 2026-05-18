@@ -57,7 +57,7 @@
       <div class="modal-card">
         <button class="modal-close" aria-label="Close">&times;</button>
         <h2 class="serif">My questions</h2>
-        <p class="muted">Upload a JSON file with your own questions. You can include any combination of parts — sections you skip will fall back to the built-in bank (unless you tick "Use my questions only" on the home screen).</p>
+        <p class="muted">Add questions one at a time using the form, or drop in a JSON pack. Anything you add becomes available in mock tests — tick "Use my own uploaded questions only" on the home screen to drill on only your own.</p>
 
         <div class="upload-stats" id="upload-stats">
           <div class="us-row"><span>Part 1 · personal</span><b class="mono" data-key="part1_personal">0</b></div>
@@ -66,19 +66,35 @@
           <div class="us-row"><span>Part 3 · for / against</span><b class="mono" data-key="part3">0</b></div>
         </div>
 
-        <div class="upload-row">
-          <label class="file-pick">
-            <input type="file" id="upload-file" accept="application/json,.json" />
-            <span>Choose JSON file…</span>
-          </label>
-          <button class="link-btn" id="download-template" type="button">Download template</button>
-          <button class="link-btn danger" id="clear-custom" type="button">Clear my questions</button>
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="type" type="button" role="tab">Type a question</button>
+          <button class="tab" data-tab="json" type="button" role="tab">Upload JSON file</button>
         </div>
 
-        <div class="upload-result hidden" id="upload-result"></div>
+        <div class="tab-panel" data-panel="type">
+          <label class="form-row">
+            <span class="form-label">What kind of question?</span>
+            <select id="type-kind">
+              <option value="part1_personal">Part 1 — personal question</option>
+              <option value="part1_compare">Part 1 — picture compare</option>
+              <option value="part2">Part 2 — long turn (3 questions)</option>
+              <option value="part3">Part 3 — for / against debate</option>
+            </select>
+          </label>
+          <div class="form-fields" id="form-fields"></div>
+          <button class="file-pick add-btn" id="add-question" type="button">Add question</button>
+        </div>
 
-        <details class="upload-help">
-          <summary class="serif">JSON format</summary>
+        <div class="tab-panel hidden" data-panel="json">
+          <div class="upload-row">
+            <label class="file-pick">
+              <input type="file" id="upload-file" accept="application/json,.json" />
+              <span>Choose JSON file…</span>
+            </label>
+            <button class="link-btn" id="download-template" type="button">Download template</button>
+          </div>
+          <details class="upload-help">
+            <summary class="serif">JSON format</summary>
 <pre class="code-block"><code>{
   "part1_personal": [
     { "text": "Tell me about your favourite teacher." }
@@ -121,7 +137,14 @@
     }
   ]
 }</code></pre>
-        </details>
+          </details>
+        </div>
+
+        <div class="upload-result hidden" id="upload-result"></div>
+
+        <div class="modal-footer">
+          <button class="link-btn danger" id="clear-custom" type="button">Clear all my questions</button>
+        </div>
       </div>
     </div>
   </template>

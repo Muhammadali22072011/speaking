@@ -399,6 +399,106 @@ const TEMPLATE_JSON = {
   ]
 };
 
+const FORM_TEMPLATES = {
+  part1_personal: `
+    <label class="form-row">
+      <span class="form-label">Question</span>
+      <input type="text" name="text" placeholder="Tell me about a teacher who influenced you." />
+    </label>
+  `,
+  part1_compare: `
+    <div class="form-grid-2">
+      <label class="form-row">
+        <span class="form-label">Picture 1 — emoji</span>
+        <input type="text" name="pic1_emoji" value="🖼️" maxlength="6" />
+      </label>
+      <label class="form-row">
+        <span class="form-label">Picture 1 — label</span>
+        <input type="text" name="pic1_label" placeholder="Reading a book" />
+      </label>
+      <label class="form-row">
+        <span class="form-label">Picture 2 — emoji</span>
+        <input type="text" name="pic2_emoji" value="🖼️" maxlength="6" />
+      </label>
+      <label class="form-row">
+        <span class="form-label">Picture 2 — label</span>
+        <input type="text" name="pic2_label" placeholder="Watching a film" />
+      </label>
+    </div>
+    <label class="form-row">
+      <span class="form-label">Questions (one per line)</span>
+      <textarea name="questions" rows="3" placeholder="What can you see in each picture?&#10;Which would you prefer, and why?"></textarea>
+    </label>
+  `,
+  part2: `
+    <div class="form-grid-2">
+      <label class="form-row">
+        <span class="form-label">Emoji</span>
+        <input type="text" name="emoji" value="📌" maxlength="6" />
+      </label>
+      <label class="form-row">
+        <span class="form-label">Topic label</span>
+        <input type="text" name="label" placeholder="A favourite game" />
+      </label>
+    </div>
+    <label class="form-row">
+      <span class="form-label">Three questions (one per line)</span>
+      <textarea name="questions" rows="3" placeholder="Tell me about a game you enjoy.&#10;Why do you find it interesting?&#10;How can games be useful for learning?"></textarea>
+    </label>
+  `,
+  part3: `
+    <label class="form-row">
+      <span class="form-label">Topic / debate question</span>
+      <input type="text" name="topic" placeholder="Should homework be banned at primary school?" />
+    </label>
+    <label class="form-row">
+      <span class="form-label">FOR — arguments (one per line)</span>
+      <textarea name="for_bullets" rows="4" placeholder="More time for sport and family&#10;Less stress for young children&#10;Encourages curiosity, not duty"></textarea>
+    </label>
+    <label class="form-row">
+      <span class="form-label">AGAINST — arguments (one per line)</span>
+      <textarea name="against_bullets" rows="4" placeholder="Builds study habits early&#10;Reinforces what was learnt in class&#10;Prepares pupils for higher grades"></textarea>
+    </label>
+  `,
+};
+
+function buildPayloadFromForm(kind, fields) {
+  const val = (n) => (fields.querySelector(`[name="${n}"]`)?.value || '').trim();
+  const lines = (n) => val(n).split('\n').map((s) => s.trim()).filter(Boolean);
+
+  if (kind === 'part1_personal') {
+    if (!val('text')) throw new Error('Please type the question.');
+    return { part1_personal: [{ text: val('text') }] };
+  }
+  if (kind === 'part1_compare') {
+    if (!val('pic1_label') || !val('pic2_label')) throw new Error('Both picture labels are required.');
+    const qs = lines('questions');
+    if (qs.length === 0) throw new Error('Add at least one question.');
+    return { part1_compare: [{
+      pic1: { emoji: val('pic1_emoji') || '🖼️', label: val('pic1_label') },
+      pic2: { emoji: val('pic2_emoji') || '🖼️', label: val('pic2_label') },
+      questions: qs,
+    }] };
+  }
+  if (kind === 'part2') {
+    if (!val('label')) throw new Error('Topic label is required.');
+    const qs = lines('questions');
+    if (qs.length === 0) throw new Error('Add at least one question.');
+    return { part2: [{
+      picture: { emoji: val('emoji') || '📌', label: val('label') },
+      questions: qs,
+    }] };
+  }
+  if (kind === 'part3') {
+    if (!val('topic')) throw new Error('Topic is required.');
+    const fors = lines('for_bullets');
+    const againsts = lines('against_bullets');
+    if (fors.length === 0 || againsts.length === 0) throw new Error('Both FOR and AGAINST need at least one argument.');
+    return { part3: [{ topic: val('topic'), for_bullets: fors, against_bullets: againsts }] };
+  }
+  throw new Error('Unknown kind');
+}
+
 let uploadModalEl = null;
 
 function openUploadModal() {
@@ -420,6 +520,54 @@ function openUploadModal() {
   uploadModalEl.addEventListener('click', (e) => { if (e.target === uploadModalEl) close(); });
   document.addEventListener('keydown', function escClose(e) {
     if (e.key === 'Escape' && uploadModalEl) { close(); document.removeEventListener('keydown', escClose); }
+  });
+
+  // Tabs
+  uploadModalEl.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      uploadModalEl.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t === tab));
+      uploadModalEl.querySelectorAll('.tab-panel').forEach((p) => {
+        p.classList.toggle('hidden', p.dataset.panel !== tab.dataset.tab);
+      });
+    });
+  });
+
+  // Form rendering
+  const kindEl = uploadModalEl.querySelector('#type-kind');
+  const fieldsEl = uploadModalEl.querySelector('#form-fields');
+  const renderFields = () => { fieldsEl.innerHTML = FORM_TEMPLATES[kindEl.value]; };
+  kindEl.addEventListener('change', renderFields);
+  renderFields();
+
+  uploadModalEl.querySelector('#add-question').addEventListener('click', async () => {
+    const resultEl = uploadModalEl.querySelector('#upload-result');
+    resultEl.classList.remove('hidden', 'error', 'success');
+    let payload;
+    try {
+      payload = buildPayloadFromForm(kindEl.value, fieldsEl);
+    } catch (err) {
+      resultEl.classList.add('error');
+      resultEl.textContent = err.message;
+      return;
+    }
+    resultEl.textContent = 'Saving…';
+    try {
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      const file = new File([blob], 'inline.json', { type: 'application/json' });
+      const res = await api.uploadQuestions(file);
+      if (res.inserted.total === 0) {
+        resultEl.classList.add('error');
+        resultEl.textContent = res.errors?.[0] || 'Question was rejected.';
+        return;
+      }
+      resultEl.classList.add('success');
+      resultEl.textContent = 'Question added.';
+      renderFields(); // reset
+      refreshUploadStats();
+    } catch (err) {
+      resultEl.classList.add('error');
+      resultEl.textContent = err.detail || err.message || 'Failed to add question';
+    }
   });
 
   refreshUploadStats();
